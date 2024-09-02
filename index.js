@@ -1,38 +1,36 @@
+// Load environment variables from the .env file
+require('dotenv').config();
+
 const app = require('./app');
 const { MongoClient } = require('mongodb');
-const UserModel = require('./models/user.model')
-const PropertyModel = require('./models/properties.model')
+const UserModel = require('./models/user.model');
+const PropertyModel = require('./models/properties.model');
 
+// Use the environment variable for the port and MongoDB URI
+const port = process.env.PORT || 3000;
+const uri = process.env.MONGODB_URI;
 
-const port = 3000;
+const client = new MongoClient(uri);
 
-const db = require('./config/db')
+// Connect to MongoDB
+async function startServer() {
+  try {
+    await client.connect();
+    console.log("Connected successfully to MongoDB Atlas");
 
-//const uri = "mongodb+srv://joseph:admin@cluster0.0tqay.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+    // Start the Express server after connecting to MongoDB
+    app.listen(port, () => {
+      console.log(`Server listening on http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error("Failed to connect to MongoDB Atlas", err);
+    process.exit(1); // Exit the process with an error code
+  }
+}
 
-
-//const client = new MongoClient(uri);
-
+// Start the server
+startServer();
 
 app.get('/', (req, res) => {
-  res.send("Hello World!!!");
+  res.send("Hello itlog");
 });
-
-app.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}`);
-});
-// async function startServer() {
-//   try {
-//     await client.connect();
-//     console.log("Connected successfully to MongoDB Atlas");
-
-//     // Now that you're connected, you can start your Express server
-    
-
-//   } catch (err) {
-//     console.error("Failed to connect to MongoDB Atlas", err);
-//     process.exit(1); // Exit the process with an error code
-//   }
-// }
-
-// startServer();
