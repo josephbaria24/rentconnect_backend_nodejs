@@ -7,6 +7,7 @@ const app = express();
 
 app.use(body_parser.json());
 
+app.use("/uploads",express.static("uploads"));
 app.use('/',userRouter);
 app.use('/',PropertyRouter);
 

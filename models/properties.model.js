@@ -2,6 +2,35 @@ const db = require('../config/db');
 const mongoose = require('mongoose');
 const UserModel = require('./user.model');
 const { Schema } = mongoose;
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "./uploads")
+    },
+    filename: (req, file, cb) => {
+        cb(null, req.decoded.userId + path.extname(file.originalname)); // Use original file extension
+      }
+});
+
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype == 'image/jpeg' || file.mimetype == 'image/png') {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+    }
+};
+
+const upload = multer({
+    storage:storage,
+    limits: {
+        fileSize: 1024 * 1024 * 6,
+    },
+    fileFilter: fileFilter,
+});
+module.exports = upload;
+
 
 const propertySchema = new Schema({
     userId: {
@@ -57,3 +86,4 @@ const propertySchema = new Schema({
 const PropertyModel = db.model('Property', propertySchema);
 
 module.exports = PropertyModel;
+
