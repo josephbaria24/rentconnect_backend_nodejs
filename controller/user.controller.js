@@ -67,12 +67,34 @@ exports.addBookmark = async (req, res, next) => {
 exports.removeBookmark = async (req, res, next) => {
     try {
         const { userId, propertyId } = req.body;
-        const user = await UserService.removeBookmark(userId, propertyId);
+
+        // Validate input
+        if (!userId || !propertyId) {
+            return res.status(400).json({ status: false, error: 'UserId and PropertyId are required' });
+        }
+
+        // Fetch the user and remove the property from bookmarks
+        const user = await UserService.getUserById(userId);
+        if (!user) {
+            return res.status(404).json({ status: false, error: 'User not found' });
+        }
+
+        // Remove propertyId from the user's bookmarks
+        const index = user.bookmarks.indexOf(propertyId);
+        if (index > -1) {
+            user.bookmarks.splice(index, 1);
+            await user.save(); // Save changes to the database
+        } else {
+            return res.status(404).json({ status: false, error: 'Property not found in bookmarks' });
+        }
+
         res.json({ status: true, user });
     } catch (error) {
-        next(error);
+        console.error('Error removing bookmark:', error); // Log the error
+        res.status(500).json({ status: false, error: error.message });
     }
 };
+
 exports.getUserBookmarks = async (req, res) => {
     try {
         const { userId } = req.params;
