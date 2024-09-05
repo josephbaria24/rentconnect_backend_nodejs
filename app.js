@@ -1,14 +1,25 @@
 const express = require('express');
-const body_parser = require('body-parser');
+const bodyParser = require('body-parser');
 const userRouter = require('./routers/user.router');
-const PropertyRouter = require('./routers/property.router');
+const propertyRouter = require('./routers/property.router');
+const bookmarkRouter = require('./routers/bookmark.router');
+
 const app = express();
 
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
 
-app.use(body_parser.json());
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static('uploads'));
 
-app.use("/uploads",express.static("uploads"));
-app.use('/',userRouter);
-app.use('/',PropertyRouter);
+// Route handlers
+app.use('/', userRouter);         // Prefix routes with /users
+app.use('/', propertyRouter); // Prefix routes with /properties
+//app.use('/bookmarks', bookmarkRouter);  // Prefix routes with /bookmarks
+
+// Default route (optional, for testing purposes)
+// app.get('/', (req, res) => {
+//   res.send('Welcome to the API!');
+// });
 
 module.exports = app;

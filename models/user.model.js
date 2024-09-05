@@ -28,6 +28,7 @@ const userSchema = new Schema({
         enum: ['occupant', 'landlord', 'admin'],
         default: 'occupant'
     },
+    
     isProfileComplete: {
         type: Boolean,
         default: false
@@ -39,18 +40,30 @@ const userSchema = new Schema({
     updated_at: {
         type: Date,
         default: Date.now
+    },
+    bookmarks: [ // New field for storing bookmarked properties
+    {
+        type: Schema.Types.ObjectId,
+        ref: 'Property' // Assuming you have a 'Property' model
     }
+]
 });
 
 
-userSchema.pre('save', async function(){
+userSchema.pre('save', async function (next) {
+    const user = this;
+    
+    // Check if the password field is modified
+    if (!user.isModified('password')) {
+        return next(); // Skip rehashing and move to next middleware
+    }
+
     try {
-        var user = this;
-        const salt = await(bcrypt.genSalt(10));
-        const hashpass = await bcrypt.hash(user.password, salt);
-        user.password = hashpass;
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+        next(); // Proceed with saving the user
     } catch (error) {
-        throw error;
+        return next(error);
     }
 });
 

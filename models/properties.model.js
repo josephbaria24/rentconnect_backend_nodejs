@@ -47,6 +47,10 @@ const propertySchema = new Schema({
         type: String, // URL to the photo
         required: true
     },
+    legalDocPhoto: {
+        type: String, // URL to the photo
+        required: true
+    },
     address: {
         type: String,
         required: true
