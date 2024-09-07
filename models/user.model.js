@@ -3,6 +3,7 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 
 
+
 const { Schema } = mongoose;
 
 
@@ -27,6 +28,10 @@ const userSchema = new Schema({
         type: String,
         enum: ['occupant', 'landlord', 'admin'],
         default: 'occupant'
+    },
+    profilePicture: {
+        type: String, // URL to the profile picture
+        required: false // Optional field
     },
     
     isProfileComplete: {

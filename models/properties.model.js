@@ -90,4 +90,3 @@ const propertySchema = new Schema({
 const PropertyModel = db.model('Property', propertySchema);
 
 module.exports = PropertyModel;
-

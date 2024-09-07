@@ -1,5 +1,7 @@
 const UserService = require('../services/user.services');
-const PropertyModel = require('../models/properties.model'); 
+const PropertyModel = require('../models/properties.model');
+const upload = require('../multerConfig');
+const path = require('path');
 
 exports.register = async(req,res,next)=>{
     try{
@@ -115,5 +117,74 @@ exports.getUserBookmarks = async (req, res) => {
         res.status(200).json({ status: true, properties });
     } catch (error) {
         res.status(500).json({ status: false, error: error.message });
+    }
+};
+
+exports.updateProfileCompletion = async (req, res, next) => {
+    try {
+        const { userId, isProfileComplete } = req.body;
+
+        if (!userId || typeof isProfileComplete !== 'boolean') {
+            return res.status(400).json({ status: false, error: 'Invalid input' });
+        }
+
+        const user = await UserService.updateProfileCompletion(userId, isProfileComplete);
+
+        if (!user) {
+            return res.status(404).json({ status: false, error: 'User not found' });
+        }
+
+        res.json({ status: true, message: 'Profile completion status updated', user });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getUserDetails = async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Fetch user and profile details through service
+      const userDetails = await UserService.fetchUserDetails(userId);
+  
+      // Check if user details were found
+      if (!userDetails) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      if (!userDetails.profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+  
+      res.status(200).json(userDetails);
+    } catch (error) {
+      console.error('Error in getUserDetails:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+  exports.updateProfilePicture = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const profilePictureUrl = path.join('uploads', file.filename);
+
+        const updatedUser = await UserService.updateUserProfilePicture(userId, profilePictureUrl);
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({
+            message: 'Profile picture updated successfully',
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Error updating profile picture:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };

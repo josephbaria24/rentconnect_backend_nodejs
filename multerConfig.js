@@ -10,8 +10,8 @@ const storage = multer.diskStorage({
         const email = req.body.email || 'user';
         const date = new Date().toISOString().replace(/:/g, '-');
         const uploadType = req.body.uploadType || 'photo'; // 'propertyPhoto' or 'legalDocPhoto'
-        
-        const fileName = `${uploadType}-${propertyId}-${email}-${date}${path.extname(file.originalname)}`;
+
+        const fileName = `${email}-${date}${path.extname(file.originalname)}`;
         cb(null, fileName);
     }
 });

@@ -1,4 +1,5 @@
 const UserModel = require('../models/user.model')
+const {ProfileModel} = require('../models/profile.model')
 const jwt = require('jsonwebtoken');
 
 class UserService{
@@ -53,19 +54,47 @@ class UserService{
             throw error;
         }
     }
-    // static async getUserBookmarks(userId) {
-    //     try {
-    //         const user = await UserModel.findById(userId).populate('bookmarks');
-    //         if (!user) {
-    //             throw new Error('User not found');
-    //         }
-    //         return { status: true, properties: user.bookmarks };
-    //     } catch (error) {
-    //         console.error('Error fetching bookmarks:', error); // Check your logs here
-    //         throw error;
-    //     }
-    //  }
-     
+
+    static async updateProfileCompletion(userId, isProfileComplete) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { isProfileComplete },
+                { new: true } // Return the updated user
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async fetchUserDetails(userId) {
+        try {
+          const user = await UserModel.findById(userId);
+          if (!user) {
+            return null;
+          }
+    
+          const profile = await ProfileModel.findOne({ userId });
+          return {
+            ...user.toObject(),
+            profile: profile ? profile.toObject() : null, // Include profile if it exists
+          };
+        } catch (error) {
+          throw error;
+        }
+      }
+      static async updateUserProfilePicture(userId, profilePictureUrl) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { profilePicture: profilePictureUrl },
+                { new: true } // Return the updated user
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    
 
 
 static async generateToken(tokenData,secretKey,jwt_expire){

@@ -4,24 +4,42 @@ const upload = require('../multerConfig');
 
 // Middleware for handling multiple file uploads
 exports.uploadPhotos = upload.fields([
-    { name: 'photo', maxCount: 1 },
-    { name: 'legalDocPhoto', maxCount: 1 }
+    { name: 'coverPhoto', maxCount: 1 },
+    { name: 'photo', maxCount: 3 },  // Allow up to 3 photos
+    { name: 'legalDocPhoto', maxCount: 3 },  // Allow up to 3 legal document photos
+    { name: 'roomPhotos', maxCount: 10 }
 ]);
 
 exports.createProperty = async (req, res, next) => {
     try {
-        const photo = req.files['photo'] ? req.files['photo'][0].path : null;
-        const legalDocPhoto = req.files['legalDocPhoto'] ? req.files['legalDocPhoto'][0].path : null;
+        let rooms;
+        try {
+            rooms = JSON.parse(req.body.rooms);
+        } catch (error) {
+            return res.status(400).json({ status: false, error: 'Invalid JSON format for rooms' });
+        }
 
-        const { userId, description, address, price, numberOfRooms, amenities, availableFrom, status, created_at, updated_at } = req.body;
+        const coverPhoto = req.files['coverPhoto'] ? req.files['coverPhoto'][0].path : null;
+        const photos = req.files['photo'] ? req.files['photo'].map(file => file.path) : [];  // Handle multiple photos
+        const legalDocPhotos = req.files['legalDocPhoto'] ? req.files['legalDocPhoto'].map(file => file.path) : [];  // Handle multiple legal document photos
+        const roomPhotos = req.files['roomPhotos'] ? req.files['roomPhotos'].map(file => file.path) : [];
 
-        let property = await PropertyServices.createProperty(userId, description, photo, legalDocPhoto, address, price, numberOfRooms, amenities, availableFrom, status, created_at, updated_at);
+        rooms.forEach((room, index) => {
+            room.photos = roomPhotos.slice(index * 2, (index + 1) * 2); // Adjust according to the number of photos
+        });
+
+        const { userId, description, address, price, numberOfRooms, amenities, availableFrom, status } = req.body;
+
+        let property = await PropertyServices.createProperty(
+            userId, description, coverPhoto, photos, legalDocPhotos, rooms, address, price, numberOfRooms, amenities, availableFrom, status
+        );
 
         res.json({ status: true, success: property });
     } catch (error) {
         next(error);
     }
-}
+};
+
 
 exports.getUserProperty = async (req, res, next) => {
     try {
