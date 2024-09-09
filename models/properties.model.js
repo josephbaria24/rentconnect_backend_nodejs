@@ -35,20 +35,19 @@ module.exports = upload;
 const propertySchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
-        ref: UserModel.modelName,
+        ref: 'User',
         required: true
     },
-
     description: {
         type: String,
         required: true
     },
     photo: {
-        type: String, // URL to the photo
+        type: String, // URL to the main property photo
         required: true
     },
     legalDocPhoto: {
-        type: String, // URL to the photo
+        type: String, // URL to the legal document photo
         required: true
     },
     address: {
@@ -56,11 +55,6 @@ const propertySchema = new Schema({
         required: true
     },
     price: {
-        type: Number,
-        required: true
-    },
-
-    numberOfRooms: {
         type: Number,
         required: true
     },
@@ -86,6 +80,7 @@ const propertySchema = new Schema({
         default: Date.now
     }
 });
+
 
 const PropertyModel = db.model('Property', propertySchema);
 

@@ -1,24 +1,23 @@
 const PropertyModel = require('../models/properties.model');
-
 class PropertyServices {
-    static async createProperty(userId, description, coverPhoto, photos, legalDocPhotos, rooms, address, price, numberOfRooms, amenities, availableFrom, status) {
-        const createProperty = new PropertyModel({
-            userId,
-            description,
-            coverPhoto,
-            photo: photos, // Handle array of photos
-            legalDocPhoto: legalDocPhotos, // Handle array of legal document photos
-            rooms, // Array of rooms with price and capacity
-            address,
+    static async createRoom(propertyId, roomNumber, capacity, price, deposit, advance, reservationDuration, reservationFee, photos) {
+        // Create the room with the provided data
+        const createRoom = new RoomModel({
+            propertyId,
+            roomNumber,
+            capacity,
             price,
-            numberOfRooms,
-            amenities,
-            availableFrom,
-            status
+            deposit,
+            advance,
+            reservationDuration,
+            reservationFee,
+            photos  // Assuming photos is an array of filenames
         });
-        return await createProperty.save();
+
+        // Save the room
+        return await createRoom.save();
     }
-    
+
 
 
     static async getUserProperty(userId) {
