@@ -39,30 +39,26 @@ exports.uploadValidId = (req, res) => {
     }
   });
 };
-
 exports.checkProfileCompletion = async (req, res) => {
-    try {
-        const userId = req.params.userId; // Get userId from URL parameters
-        // Fetch the user and profile details
-        const user = await UserModel.findById(userId);
-        const profile = await ProfileModel.findOne({ userId });
+  try {
+      const userId = req.params.userId; // Get userId from URL parameters
+      // Fetch the user and profile details
+      const user = await UserModel.findById(userId);
+      const profile = await ProfileModel.findOne({ userId });
 
-        if (user && profile) {
-            res.status(200).json({
-                status: true,
-                isProfileComplete: profile.isProfileComplete,
-            });
-        } else if (user) {
-            // User exists but no profile found
-            res.status(200).json({
-                status: true,
-                isProfileComplete: false, // Assuming profile is not complete if it doesn't exist
-            });
-        } else {
-            // User not found
-            res.status(404).json({ status: false, error: 'User not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ status: false, error: error.message });
-    }
+      if (user) {
+          // Set `isProfileComplete` to profile's actual completion status
+          const isProfileComplete = user ? user.isProfileComplete : false;
+          res.status(200).json({
+              status: true,
+              isProfileComplete: isProfileComplete, // Reflect actual completion status
+          });
+      } else {
+          // User not found
+          res.status(404).json({ status: false, error: 'User not found' });
+      }
+  } catch (error) {
+      res.status(500).json({ status: false, error: error.message });
+  }
 };
+

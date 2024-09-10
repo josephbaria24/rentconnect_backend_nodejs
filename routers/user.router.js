@@ -11,7 +11,7 @@ router.get('/getUserBookmarks/:userId', UserController.getUserBookmarks);
 
 router.patch('/updateProfileCompletion', UserController.updateProfileCompletion);
 router.get('/user/:id', UserController.getUserDetails);
-router.patch('/updateProfilePicture/:userId', upload.single('profilePicture'), UserController.updateProfilePicture);
+router.patch('/updateProfilePicture/:userId', upload.any(), UserController.updateProfilePicture);
 //router.get('/profilePicture/:userId', UserController.getProfilePicture);
 
 module.exports = router;

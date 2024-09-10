@@ -9,7 +9,7 @@ const roomSchema = new Schema({
         required: true
     },
     roomNumber: {
-        type: String, // Room/Unit number (e.g., "No. 1", "No. 2")
+        type: Number, // Room/Unit number (e.g., "No. 1", "No. 2")
         required: true
     },
     photo1: {

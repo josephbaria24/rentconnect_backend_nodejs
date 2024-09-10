@@ -3,10 +3,19 @@ const OccupantModel = require('../models/occupant.model');
 
 
 class RoomServices {
-    static async createRoom(roomData) {
-        const room = new RoomModel(roomData); // roomData should be an object, not an array
-        return await room.save();
+    static async createMultipleRooms(roomsData) {
+        const savedRooms = await RoomModel.insertMany(roomsData);
+        return savedRooms;
     }
+    // static async createMultipleRooms(roomsData) {
+    //     const rooms = [];
+    //     for (const roomData of roomsData) {
+    //         const room = new RoomModel(roomData);
+    //         rooms.push(await room.save());
+    //     }
+    //     return rooms;
+    // }
+
     static async getRoomsByPropertyId(propertyId) {
         return await RoomModel.find({ propertyId }); // Find all rooms where propertyId matches
     }

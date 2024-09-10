@@ -46,16 +46,32 @@ const propertySchema = new Schema({
         type: String, // URL to the main property photo
         required: true
     },
+    photo2: {
+        type: String, // URL to the main property photo
+        required: false
+    },
+    photo3: {
+        type: String, // URL to the main property photo
+        required: false
+    },
     legalDocPhoto: {
         type: String, // URL to the legal document photo
-        required: true
+        required: false
+    },
+    legalDocPhoto2: {
+        type: String, // URL to the legal document photo
+        required: false
+    },
+    legalDocPhoto3: {
+        type: String, // URL to the legal document photo
+        required: false
+    },
+    typeOfProperty: {
+      type: String,
+      required: true
     },
     address: {
         type: String,
-        required: true
-    },
-    price: {
-        type: Number,
         required: true
     },
     amenities: {
@@ -66,6 +82,11 @@ const propertySchema = new Schema({
         type: Date,
         required: true
     },
+    location: {
+        type: { type: String, enum: ['Point'], required: false },
+        coordinates: { type: [Number], required: false },
+        
+      },
     status: {
         type: String,
         enum: ['available', 'reserved', 'rented'],

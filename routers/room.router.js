@@ -4,7 +4,7 @@ const RoomController = require('../controller/rooms.controller');
 const upload = require('../multerConfig'); // Import multer configuration
 
 // Apply the upload middleware to routes that need file uploads
-router.post('/createRoom', RoomController.uploadPhotos, RoomController.createRoom);
+router.post('/createRoom', upload.any(), RoomController.createRoom);
 
 router.post('/rooms/addUser', RoomController.addUserToRoom);
 router.post('/rooms/addNonUser', RoomController.addNonUserToRoom);
