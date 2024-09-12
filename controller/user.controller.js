@@ -6,12 +6,10 @@ const path = require('path');
 exports.register = async(req,res,next)=>{
     try{
         const { email, password } = req.body;
-
         const successRes = await UserService.registerUser(email, password);
-
         res.json({status:true, success:"User Registered Successfully"});
     } catch(error) {
-        throw error
+        res.status(500).json({ status: false, error: error.message });
     }
 }
 
