@@ -93,6 +93,18 @@ class UserService{
             throw error;
         }
     }
+    static async updateUserInfo(userId, updatedFields) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $set: updatedFields }, // Set only the fields provided
+                { new: true, runValidators: true } // Return the updated user, apply schema validators
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    
     
     
 

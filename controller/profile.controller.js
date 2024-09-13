@@ -5,17 +5,28 @@ const ProfileService = require('../services/profile.services');
 const UserModel = require('../models/user.model')
 
 exports.updateProfile = async (req, res) => {
-    try {
-      const { userId, fullName, phone, address, isProfileComplete } = req.body;
-      
-      // Update profile and user document
-      const profile = await ProfileService.updateProfile(userId, { fullName, contactDetails: { phone, address }, isProfileComplete, updated_at: Date.now() });
-      
-      res.status(200).json({ status: true, profile });
-    } catch (error) {
-      res.status(500).json({ status: false, error: error.message });
-    }
-  };
+  try {
+    const { userId, firstName, lastName, gender, phone, address, isProfileComplete } = req.body;
+
+    const updateData = {
+      firstName,
+      lastName,
+      gender,
+      contactDetails: {
+        phone,
+        address,
+      },
+      isProfileComplete,
+      updated_at: Date.now(),
+    };
+
+    const profile = await ProfileService.updateProfile(userId, updateData);
+
+    res.status(200).json({ status: true, profile });
+  } catch (error) {
+    res.status(500).json({ status: false, error: error.message });
+  }
+};
 
 exports.uploadValidId = (req, res) => {
   upload.single('validIdImage')(req, res, async (err) => {

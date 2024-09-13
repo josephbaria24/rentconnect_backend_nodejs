@@ -35,9 +35,17 @@ const profileSchema = new Schema({
     ref: 'user',
     required: true
   },
-  fullName: {
+  firstName: {
     type: String,
     required: true
+  },
+  lastName: {
+    type: String,
+    required: true
+  },
+  gender: {
+    type: String,
+    required: true,
   },
   valid_id: {
     type: String, // URL to the valid ID photo

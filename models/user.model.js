@@ -27,7 +27,8 @@ const userSchema = new Schema({
     role: {
         type: String,
         enum: ['occupant', 'landlord', 'admin'],
-        default: 'occupant'
+        required: false,
+        // default: 'occupant'
     },
     profilePicture: {
         type: String, // URL to the profile picture

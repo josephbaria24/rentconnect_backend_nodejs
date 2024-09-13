@@ -214,3 +214,30 @@ exports.updateProfilePicture = async (req, res) => {
         res.status(500).json({ message: "Server error while updating profile picture" });
     }
 };
+exports.updateUserInfo = async (req, res, next) => {
+    try {
+        const { userId, email, role } = req.body;
+
+        // Validate required fields
+        if (!userId) {
+            return res.status(400).json({ status: false, error: 'UserId is required' });
+        }
+
+        // Collect updated information
+        const updatedFields = {};
+        if (email) updatedFields.email = email;
+        if (role) updatedFields.role = role;
+        
+
+        // Call service to update the user
+        const updatedUser = await UserService.updateUserInfo(userId, updatedFields);
+
+        if (!updatedUser) {
+            return res.status(404).json({ status: false, error: 'User not found' });
+        }
+
+        res.json({ status: true, message: 'User information updated successfully', user: updatedUser });
+    } catch (error) {
+        next(error);
+    }
+};

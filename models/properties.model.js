@@ -44,7 +44,7 @@ const propertySchema = new Schema({
     },
     photo: {
         type: String, // URL to the main property photo
-        required: true
+        required: false
     },
     photo2: {
         type: String, // URL to the main property photo
@@ -89,8 +89,8 @@ const propertySchema = new Schema({
       },
     status: {
         type: String,
-        enum: ['available', 'reserved', 'rented'],
-        default: 'available'
+        enum: ['approved', 'under review', 'failed', 'waiting'],
+        default: 'waiting'
     },
     created_at: {
         type: Date,
@@ -103,6 +103,6 @@ const propertySchema = new Schema({
 });
 
 
-const PropertyModel = db.model('Property', propertySchema);
+const PropertyModel = db.model('Property', propertySchema, 'pending_request');
 
 module.exports = PropertyModel;
