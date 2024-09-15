@@ -69,5 +69,5 @@ const roomSchema = new Schema({
     }
 });
 
-const RoomModel = db.model('Room', roomSchema);
+const RoomModel = db.model('Room', roomSchema, 'pending_request_room');
 module.exports = RoomModel;

@@ -61,6 +61,11 @@ const profileSchema = new Schema({
       required: true
     }
   },
+  profileStatus: { 
+    type: String, 
+    enum: ['pending', 'approved', 'rejected', 'none'], 
+    default: 'none' 
+  },
   created_at: {
     type: Date,
     default: Date.now
@@ -69,9 +74,10 @@ const profileSchema = new Schema({
     type: Date,
     default: Date.now
   }
+  
 });
 
-const ProfileModel = db.model('Profile', profileSchema);
+const ProfileModel = db.model('Profile', profileSchema, 'pending_request_profile');
 
 module.exports = {
   ProfileModel,

@@ -60,9 +60,14 @@ exports.checkProfileCompletion = async (req, res) => {
       if (user) {
           // Set `isProfileComplete` to profile's actual completion status
           const isProfileComplete = user ? user.isProfileComplete : false;
+          const userRole = user ? user.role : 'none';
+          const profileStatus = profile.profileStatus;
+          
           res.status(200).json({
               status: true,
-              isProfileComplete: isProfileComplete, // Reflect actual completion status
+              isProfileComplete: isProfileComplete,
+              profileStatus: profileStatus, // Reflect actual completion status
+              userRole: userRole,
           });
       } else {
           // User not found

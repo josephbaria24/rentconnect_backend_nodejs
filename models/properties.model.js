@@ -103,6 +103,6 @@ const propertySchema = new Schema({
 });
 
 
-const PropertyModel = db.model('Property', propertySchema, 'pending_request');
+const PropertyModel = db.model('Property', propertySchema, 'pending_request_property');
 
 module.exports = PropertyModel;

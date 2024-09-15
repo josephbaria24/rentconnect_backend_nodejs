@@ -6,7 +6,7 @@ const RoomModel = require('../models/room.model');
 class AdminService {
     static async fetchAllUsersWithDetails() {
         try {
-            // Aggregation pipeline to fetch users with their profiles, properties, and rooms
+            // Aggregation pipeline to fetch users with pending property requests
             const users = await UserModel.aggregate([
                 {
                     $lookup: {
@@ -24,7 +24,7 @@ class AdminService {
                 },
                 {
                     $lookup: {
-                        from: 'properties', // Collection name for Property
+                        from: 'pending_request_property', // Collection name for Property
                         localField: '_id',
                         foreignField: 'userId',
                         as: 'properties'
@@ -33,12 +33,12 @@ class AdminService {
                 {
                     $unwind: {
                         path: '$properties',
-                        preserveNullAndEmptyArrays: true // Preserve users without properties
+                        preserveNullAndEmptyArrays: false // Only keep users with properties
                     }
                 },
                 {
                     $lookup: {
-                        from: 'rooms', // Collection name for Room
+                        from: 'pending_request_room', // Collection name for Room
                         localField: 'properties._id',
                         foreignField: 'propertyId',
                         as: 'properties.rooms'
@@ -51,10 +51,41 @@ class AdminService {
                         profile: { $first: '$profile' },
                         properties: { $push: '$properties' }
                     }
+                },
+                {
+                    // Match users who have at least one property with a pending request
+                    $match: {
+                        'properties.0': { $exists: true } // Ensure the user has at least one property
+                    }
                 }
             ]);
 
             return users;
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async approveProfile(userId) {
+        try {
+            const profile = await ProfileModel.findOneAndUpdate(
+                { userId },
+                { profileStatus: 'approved' },
+                { new: true }
+            );
+            return profile;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async rejectProfile(userId) {
+        try {
+            const profile = await ProfileModel.findOneAndUpdate(
+                { userId },
+                { profileStatus: 'rejected' },
+                { new: true }
+            );
+            return profile;
         } catch (error) {
             throw error;
         }
