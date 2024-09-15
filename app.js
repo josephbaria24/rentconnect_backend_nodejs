@@ -4,7 +4,7 @@ const userRouter = require('./routers/user.router');
 const propertyRouter = require('./routers/property.router');
 const profileRouter = require('./routers/profile.router'); // Add this line
 const roomRouter = require('./routers/room.router')
-const adminRouter = require('../nodejsproject/routers/admin.router')
+const adminRouter = require('./routers/admin.router')
 const app = express();
 
 // Middleware to parse JSON bodies
