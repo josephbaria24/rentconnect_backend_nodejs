@@ -25,7 +25,7 @@ exports.createProperty = async (req, res, next) => {
         const legalDocPhoto3 = req.files['legalDocPhoto3'] ? req.files['legalDocPhoto3'][0].path : null;
 
         // Validate if required fields are present
-        const { userId, description, address, amenities, availableFrom, status, typeOfProperty, location } = req.body;
+        const { userId, description, street, barangay, city, amenities, availableFrom, status, typeOfProperty, location } = req.body;
 
         // Ensure location is parsed correctly if it's a JSON string
         let parsedLocation;
@@ -40,7 +40,7 @@ exports.createProperty = async (req, res, next) => {
         }
 
         let property = await PropertyServices.createProperty(
-            userId, description, photo, photo2, photo3, legalDocPhoto, legalDocPhoto2, legalDocPhoto3, address, amenities, availableFrom, status, typeOfProperty, parsedLocation
+            userId, description, photo, photo2, photo3, legalDocPhoto, legalDocPhoto2, legalDocPhoto3, street, barangay, city, amenities, availableFrom, status, typeOfProperty, parsedLocation
         );
 
         if (!property || !property._id) {

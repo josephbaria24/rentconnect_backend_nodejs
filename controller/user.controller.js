@@ -188,27 +188,29 @@ exports.getUserDetails = async (req, res) => {
 // };
 exports.updateProfilePicture = async (req, res) => {
     try {
-        // Check if any files are uploaded
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
-        // Find the profile picture file in the uploaded files
         const profilePicture = req.files.find(file => file.fieldname === 'profilePicture');
-
-        // Check if the profile picture file was uploaded
         if (!profilePicture) {
             return res.status(400).json({ message: "No profile picture uploaded" });
         }
 
-        // Process the file (e.g., update user profile with the new profile picture)
-        const userId = req.params.userId;
-        const filePath = profilePicture.path;
+        // The path will be the Cloudinary URL now
+        const profilePictureUrl = profilePicture.path;
 
-        // Call service or directly update user document with new profile picture path
-        await UserService.updateUserProfilePicture(userId, filePath);
+        // Update user with the Cloudinary URL
+        const updatedUser = await UserService.updateUserProfilePicture(req.params.userId, profilePictureUrl);
 
-        res.json({ message: "Profile picture updated successfully", filePath });
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            message: 'Profile picture updated successfully',
+            user: updatedUser
+        });
     } catch (error) {
         console.error("Error updating profile picture:", error);
         res.status(500).json({ message: "Server error while updating profile picture" });

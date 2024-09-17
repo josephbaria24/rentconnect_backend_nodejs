@@ -64,7 +64,7 @@ const profileSchema = new Schema({
   profileStatus: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected', 'none'], 
-    default: 'none' 
+    default: 'pending' 
   },
   created_at: {
     type: Date,

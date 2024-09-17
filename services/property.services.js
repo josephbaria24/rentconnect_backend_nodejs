@@ -1,7 +1,7 @@
 const PropertyModel = require('../models/properties.model');
 
 class PropertyServices {
-    static async createProperty(userId, description, photo, photo2, photo3, legalDocPhoto, legalDocPhoto2, legalDocPhoto3, address, amenities, availableFrom, status, typeOfProperty, location) {
+    static async createProperty(userId, description, photo, photo2, photo3, legalDocPhoto, legalDocPhoto2, legalDocPhoto3, street, barangay, city, amenities, availableFrom, status, typeOfProperty, location) {
         // Validate location
         if (!location || !location.type || !location.coordinates || !Array.isArray(location.coordinates) || location.coordinates.length !== 2) {
             throw new Error('Invalid location format. It must include type and coordinates.');
@@ -22,7 +22,9 @@ class PropertyServices {
             legalDocPhoto,
             legalDocPhoto2,
             legalDocPhoto3,
-            address,
+            street,
+            barangay,
+            city,
             amenities,
             availableFrom,
             status,

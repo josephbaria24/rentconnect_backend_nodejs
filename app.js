@@ -7,6 +7,8 @@ const roomRouter = require('./routers/room.router')
 const adminRouter = require('./routers/admin.router')
 const app = express();
 
+
+
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
 
@@ -20,9 +22,6 @@ app.use('/profile', profileRouter); // Add this line
 app.use('/rooms', roomRouter);
 app.use('/', adminRouter);
 
-// Default route (optional, for testing purposes)
-// app.get('/', (req, res) => {
-//   res.send('Welcome to the API!');
-// });
+
 
 module.exports = app;

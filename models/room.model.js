@@ -40,6 +40,15 @@ const roomSchema = new Schema({
         type: Number, // Advance payment (in months of rent)
         required: true
     },
+    roomStatus: {
+        type: String,
+        enum: ['occupied', 'available', 'reserved'],
+        default: 'available'
+    },
+    dueDate: {
+        type: Date, // Date type for the due date
+        required: false // Optional field, adjust based on your needs
+    },
     reservationDuration: {
         type: Number, // Reservation duration (in days)
         required: true
@@ -69,5 +78,5 @@ const roomSchema = new Schema({
     }
 });
 
-const RoomModel = db.model('Room', roomSchema, 'pending_request_room');
+const RoomModel = db.model('Room', roomSchema, 'rooms');
 module.exports = RoomModel;

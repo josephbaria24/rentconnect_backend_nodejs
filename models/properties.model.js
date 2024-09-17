@@ -70,17 +70,26 @@ const propertySchema = new Schema({
       type: String,
       required: true
     },
-    address: {
-        type: String,
-        required: true
+    street: {
+      type: String,
+      required: true
+    },
+    barangay: {
+      type: String,
+      required: true
+    },
+    city: {
+      type: String,
+      required: true,
+      default: "Puerto Princesa City"
     },
     amenities: {
         type: [String], // Array of amenities
         default: []
     },
-    availableFrom: {
+    listedDate: {
         type: Date,
-        required: true
+        required: false
     },
     location: {
         type: { type: String, enum: ['Point'], required: false },
@@ -89,8 +98,8 @@ const propertySchema = new Schema({
       },
     status: {
         type: String,
-        enum: ['approved', 'under review', 'failed', 'waiting'],
-        default: 'waiting'
+        enum: ['Approved', 'Under Review', 'Failed', 'Waiting'],
+        default: 'Waiting'
     },
     created_at: {
         type: Date,
@@ -103,6 +112,6 @@ const propertySchema = new Schema({
 });
 
 
-const PropertyModel = db.model('Property', propertySchema, 'pending_request_property');
+const PropertyModel = db.model('Property', propertySchema, 'listing_properties');
 
 module.exports = PropertyModel;

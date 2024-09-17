@@ -1,79 +1,6 @@
 const RoomServices = require('../services/room.services');
 const upload = require('../multerConfig');
 const RoomModel = require('../models/room.model');
-// Middleware for handling multiple file uploads
-// exports.uploadPhotos = upload.fields([
-//     { name: 'rooms[0][photo1]', maxCount: 10 },
-//     { name: 'rooms[0][photo2]', maxCount: 10 },
-//     { name: 'rooms[0][photo3]', maxCount: 10 },
-//     { name: 'rooms[1][photo1]', maxCount: 1 },
-//     { name: 'rooms[1][photo2]', maxCount: 1 },
-//     { name: 'rooms[1][photo3]', maxCount: 1 },
-//     { name: 'rooms[2][photo1]', maxCount: 1 },
-//     { name: 'rooms[2][photo2]', maxCount: 1 },
-//     { name: 'rooms[2][photo3]', maxCount: 1 },
-//     { name: 'rooms[3][photo1]', maxCount: 1 },
-//     { name: 'rooms[3][photo2]', maxCount: 1 },
-//     { name: 'rooms[3][photo3]', maxCount: 1 },
-//     { name: 'rooms[4][photo1]', maxCount: 1 },
-//     { name: 'rooms[4][photo2]', maxCount: 1 },
-//     { name: 'rooms[4][photo3]', maxCount: 1 },
-//     { name: 'rooms[5][photo1]', maxCount: 1 },
-//     { name: 'rooms[5][photo2]', maxCount: 1 },
-//     { name: 'rooms[5][photo3]', maxCount: 1 },
-//     { name: 'rooms[6][photo1]', maxCount: 1 },
-//     { name: 'rooms[6][photo2]', maxCount: 1 },
-//     { name: 'rooms[6][photo3]', maxCount: 1 },
-//     { name: 'rooms[7][photo1]', maxCount: 1 },
-//     { name: 'rooms[7][photo2]', maxCount: 1 },
-//     { name: 'rooms[7][photo3]', maxCount: 1 },
-//     { name: 'rooms[8][photo1]', maxCount: 1 },
-//     { name: 'rooms[8][photo2]', maxCount: 1 },
-//     { name: 'rooms[8][photo3]', maxCount: 1 },
-//     { name: 'rooms[9][photo1]', maxCount: 1 },
-//     { name: 'rooms[9][photo2]', maxCount: 1 },
-//     { name: 'rooms[9][photo3]', maxCount: 1 },
-//     { name: 'rooms[10][photo1]', maxCount: 1 },
-//     { name: 'rooms[10][photo2]', maxCount: 1 },
-//     { name: 'rooms[10][photo3]', maxCount: 1 },
-//     // Repeat for other rooms as needed
-// ]);
-
-// exports.createRoom = async (req, res, next) => {
-//     try {
-//         console.log("Request files:", req.files);
-//         console.log("Request body:", req.body);
-
-//         // Extract rooms from request body
-//         const rooms = [];
-//         const roomData = req.body.rooms; // Directly access `rooms` array from body
-//         console.log("Room data array:", roomData);
-
-//         // Process files and room data
-//         roomData.forEach((room, i) => {
-//             const roomFiles = {
-//                 photo1: req.files[`rooms[${i}][photo1]`] ? req.files[`rooms[${i}][photo1]`][0].path : null,
-//                 photo2: req.files[`rooms[${i}][photo2]`] ? req.files[`rooms[${i}][photo2]`][0].path : null,
-//                 photo3: req.files[`rooms[${i}][photo3]`] ? req.files[`rooms[${i}][photo3]`][0].path : null,
-//             };
-
-//             // Merge room data with file paths
-//             rooms.push({ ...room, ...roomFiles });
-//         });
-
-//         console.log("Processed rooms data:", rooms);
-
-//         // Save all rooms
-//         const savedRooms = await RoomServices.createMultipleRooms(rooms);
-//         console.log("Saved rooms:", savedRooms);
-
-//         res.json({ status: true, success: savedRooms });
-//     } catch (error) {
-//         console.error("Error creating rooms:", error);
-//         next(error);
-//     }
-// };
-
 
 
 exports.createRoom = async (req, res, next) => {
@@ -92,6 +19,8 @@ exports.createRoom = async (req, res, next) => {
                 capacity: room.capacity,
                 deposit: room.deposit,
                 advance: room.advance,
+                roomStatus: room.roomStatus,
+                dueDate: room.dueDate,
                 reservationDuration: room.reservationDuration,
                 reservationFee: room.reservationFee,
             };

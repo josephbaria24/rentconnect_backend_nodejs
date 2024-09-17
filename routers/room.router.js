@@ -10,7 +10,7 @@ router.post('/rooms/addUser', RoomController.addUserToRoom);
 router.post('/rooms/addNonUser', RoomController.addNonUserToRoom);
 
 router.get('/getRoom/:id', RoomController.getRoom);
-router.put('/updateRoom/:id', RoomController.updateRoom);
+router.patch('/updateRoom/:id', RoomController.updateRoom);
 router.delete('/deleteRoom/:id', RoomController.deleteRoom);
 router.get('/properties/:propertyId/rooms', RoomController.getRoomsByPropertyId);
 
