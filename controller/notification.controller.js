@@ -1,9 +1,9 @@
-const Notification = require('../models/notification.model');
 const notificationService = require('../services/notification.services');
+const Notification = require('../models/notification.model');
 
 // Controller to create a notification (called after property approval)
 exports.createNotification = async (req, res) => {
-  const { userId, message } = req.body;
+  const { userId, message, roomId, roomNumber, requesterEmail, inquiryId } = req.body;
 
   // Check if required fields are provided
   if (!userId || !message) {
@@ -11,13 +11,20 @@ exports.createNotification = async (req, res) => {
   }
 
   try {
-    const notification = await notificationService.createNotification(userId, message);
+    const notification = await notificationService.createNotification(
+      userId, 
+      message, 
+      'unread', 
+      roomId, 
+      roomNumber, 
+      requesterEmail,
+      inquiryId // Pass inquiryId to the service
+    );
     res.status(201).json({ status: true, notification });
   } catch (error) {
     res.status(500).json({ status: false, error: error.message });
   }
 };
-
 
 // Controller to get unread notifications for a user
 exports.getUnreadNotifications = async (req, res) => {
@@ -31,13 +38,13 @@ exports.getUnreadNotifications = async (req, res) => {
   }
 };
 
-// Controller to mark notifications as read
+// Controller to mark a notification as read
 exports.markAsRead = async (req, res) => {
-  const { notificationId } = req.params;
+  const { _id } = req.params;
 
   try {
     const notification = await Notification.findByIdAndUpdate(
-      notificationId,
+      _id,
       { status: 'read' },
       { new: true }
     );
@@ -51,21 +58,35 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({ status: false, error: error.message });
   }
 };
-exports.clearNotifications = async (req, res, next) => {
-    try {
-      const { userId } = req.params;
-  
-      // Check if the userId exists
-      if (!userId) {
-        return res.status(400).json({ status: false, error: 'UserId is required' });
-      }
-  
-      // Clear notifications for the given user
-      await Notification.deleteMany({ userId });
-  
-      res.status(200).json({ status: true, message: 'Notifications cleared successfully' });
-    } catch (error) {
-      console.error('Error clearing notifications:', error);
-      res.status(500).json({ status: false, error: error.message });
+
+exports.markAllAsRead = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    if (!userId) {
+      return res.status(400).json({ status: false, error: 'UserId is required' });
     }
-  };
+
+    const result = await notificationService.markAllAsRead(userId);
+    res.status(200).json({ status: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ status: false, error: error.message });
+  }
+};
+
+// Controller to clear all notifications for a user
+exports.clearNotifications = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    if (!userId) {
+      return res.status(400).json({ status: false, error: 'UserId is required' });
+    }
+
+    await Notification.deleteMany({ userId });
+
+    res.status(200).json({ status: true, message: 'Notifications cleared successfully' });
+  } catch (error) {
+    res.status(500).json({ status: false, error: error.message });
+  }
+};

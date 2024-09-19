@@ -1,20 +1,38 @@
 const mongoose = require('mongoose');
-const db = require('../config/db')
+const db = require('../config/db');
 
 const NotificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
+    ref: 'User', // Ensure this matches your User model name
     required: true
   },
   message: {
     type: String,
     required: true
   },
-  status: { // Added status field
+  roomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Room',
+    required: false
+  },
+  roomNumber: {
+    type: Number,
+    required: false
+  },
+  requesterEmail: {
     type: String,
-    enum: ['unread', 'read'], // You can define the possible status values
-    default: 'unread' // Default value
+    required: false
+  },
+  inquiryId: { // New field for linking to the inquiry
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Inquiry',
+    required: false
+  },
+  status: {
+    type: String,
+    enum: ['unread', 'read'],
+    default: 'unread'
   },
   created_at: {
     type: Date,
