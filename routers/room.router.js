@@ -13,5 +13,7 @@ router.get('/getRoom/:id', RoomController.getRoom);
 router.patch('/updateRoom/:id', RoomController.updateRoom);
 router.delete('/deleteRoom/:id', RoomController.deleteRoom);
 router.get('/properties/:propertyId/rooms', RoomController.getRoomsByPropertyId);
+router.post('/reserve', RoomController.reserveRoom);
+router.post('/request-rent', RoomController.requestRent);
 
 module.exports = router;

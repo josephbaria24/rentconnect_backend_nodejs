@@ -75,7 +75,17 @@ const roomSchema = new Schema({
     updated_at: {
         type: Date,
         default: Date.now
-    }
+    },
+    reservations: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Reservation',
+        required: false
+    }],
+    rentalRequests: [{
+        type: Schema.Types.ObjectId,
+        ref: 'RentalRequest',
+        required: false
+    }]
 });
 
 const RoomModel = db.model('Room', roomSchema, 'rooms');

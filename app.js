@@ -5,6 +5,7 @@ const propertyRouter = require('./routers/property.router');
 const profileRouter = require('./routers/profile.router'); // Add this line
 const roomRouter = require('./routers/room.router')
 const adminRouter = require('./routers/admin.router')
+const notificationRouter = require('./routers/notification.router')
 const app = express();
 
 
@@ -20,6 +21,7 @@ app.use('/', userRouter);         // Prefix routes with /users
 app.use('/', propertyRouter); // Prefix routes with /properties
 app.use('/profile', profileRouter); // Add this line
 app.use('/rooms', roomRouter);
+app.use('/notification', notificationRouter);
 app.use('/', adminRouter);
 
 

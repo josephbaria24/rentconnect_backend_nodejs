@@ -1,5 +1,6 @@
 const UserService = require('../services/user.services');
 const PropertyModel = require('../models/properties.model');
+const NotificationService = require('../services/notification.services');
 const upload = require('../multerConfig');
 const path = require('path');
 
@@ -241,5 +242,30 @@ exports.updateUserInfo = async (req, res, next) => {
         res.json({ status: true, message: 'User information updated successfully', user: updatedUser });
     } catch (error) {
         next(error);
+    }
+};
+
+
+exports.createRentalRequest = async (req, res) => {
+    try {
+        const { roomId, userId } = req.body;
+        // Logic to create a rental request
+        // Notify the landlord
+        const landlordId = await getLandlordIdByRoomId(roomId); // Fetch landlord ID based on room
+        const message = `New rental request for room ${roomId} from user ${userId}`;
+        await NotificationService.createNotification(landlordId, 'request', message);
+        res.status(201).json({ status: true, message: 'Rental request created and landlord notified' });
+    } catch (error) {
+        res.status(500).json({ status: false, error: error.message });
+    }
+};
+
+exports.getUserNotifications = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const notifications = await NotificationService.getNotifications(userId);
+        res.status(200).json({ status: true, notifications });
+    } catch (error) {
+        res.status(500).json({ status: false, error: error.message });
     }
 };

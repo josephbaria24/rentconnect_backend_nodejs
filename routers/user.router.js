@@ -13,6 +13,8 @@ router.patch('/updateProfileCompletion', UserController.updateProfileCompletion)
 router.get('/user/:id', UserController.getUserDetails);
 router.patch('/updateProfilePicture/:userId', upload.any(), UserController.updateProfilePicture);
 router.patch('/updateUserInfo', UserController.updateUserInfo);
+router.post('/createRentalRequest', UserController.createRentalRequest);
+router.get('/notifications/:userId', UserController.getUserNotifications);
 
 //router.get('/profilePicture/:userId', UserController.getProfilePicture);
 

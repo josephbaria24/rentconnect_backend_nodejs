@@ -130,3 +130,71 @@ exports.getRoomsByPropertyId = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.reserveRoom = async (req, res) => {
+    try {
+        const { roomId, userId } = req.body;
+
+        // Check if the room is available
+        const room = await RoomModel.findById(roomId);
+        if (!room || room.roomStatus !== 'available') {
+            return res.status(400).json({ status: false, error: 'Room is not available for reservation' });
+        }
+
+        // Create reservation request
+        const reservation = new ReservationModel({
+            roomId,
+            userId,
+            status: 'pending'
+        });
+        await reservation.save();
+
+        // Add reservation to the room's reservations
+        room.reservations.push(reservation._id);
+        await room.save();
+
+        // Notify landlord
+        const property = await room.populate('propertyId').execPopulate();
+        const landlord = property.propertyOwner; // Assume property has a landlord reference
+        NotificationService.createNotification(landlord, `A reservation request has been made for room ${room.roomNumber}`);
+
+        res.json({ status: true, reservation });
+    } catch (error) {
+        console.error('Error reserving room:', error);
+        res.status(500).json({ status: false, error: error.message });
+    }
+};
+
+exports.requestRent = async (req, res) => {
+    try {
+        const { roomId, userId } = req.body;
+
+        // Check if the room is available
+        const room = await RoomModel.findById(roomId);
+        if (!room || room.roomStatus !== 'available') {
+            return res.status(400).json({ status: false, error: 'Room is not available for rent' });
+        }
+
+        // Create rental request
+        const rentalRequest = new RentalRequestModel({
+            roomId,
+            userId,
+            status: 'pending'
+        });
+        await rentalRequest.save();
+
+        // Add rental request to the room's rentalRequests
+        room.rentalRequests.push(rentalRequest._id);
+        await room.save();
+
+        // Notify landlord
+        const property = await room.populate('propertyId').execPopulate();
+        const landlord = property.propertyOwner; // Assume property has a landlord reference
+        NotificationService.createNotification(landlord, `A rental request has been made for room ${room.roomNumber}`);
+
+        res.json({ status: true, rentalRequest });
+    } catch (error) {
+        console.error('Error requesting rent:', error);
+        res.status(500).json({ status: false, error: error.message });
+    }
+};
