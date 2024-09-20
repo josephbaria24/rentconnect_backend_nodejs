@@ -23,9 +23,18 @@ const updateInquiryStatus = async (inquiryId, status) => {
   return await Inquiry.findByIdAndUpdate(inquiryId, { status }, { new: true });
 };
 
+const getInquiriesByPropertyId = async (propertyId) => {
+  return await Inquiry.find({ 'roomId.propertyId': propertyId }).populate('roomId');
+};
+
+const getInquiriesByRoomId = async (roomId) => {
+  return await Inquiry.find({ roomId }).populate('roomId');
+};
 module.exports = {
   createInquiry,
   getInquiriesByUserId,
   getInquiriesByRoomOwner,
   updateInquiryStatus,
+  getInquiriesByRoomId,
+  getInquiriesByPropertyId, // Add this line
 };
