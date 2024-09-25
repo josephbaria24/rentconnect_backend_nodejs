@@ -29,6 +29,8 @@ exports.login = async(req,res,next)=>{
         if(isMatch === false) {
             throw new Error('Password invalid');
         }
+        user.last_login = new Date();
+        await user.save();
 
         let tokenData = {_id:user._id,email:user.email};
         const token = await UserService.generateToken(tokenData,"secretKey",'1h');
@@ -161,32 +163,7 @@ exports.getUserDetails = async (req, res) => {
     }
   };
 
-//   exports.updateProfilePicture = async (req, res) => {
-//     try {
-//         const userId = req.params.userId;
-//         const file = req.file;
 
-//         if (!file) {
-//             return res.status(400).json({ message: 'No file uploaded' });
-//         }
-
-//         const profilePictureUrl = path.join('uploads', file.filename);
-
-//         const updatedUser = await UserService.updateUserProfilePicture(userId, profilePictureUrl);
-
-//         if (!updatedUser) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-
-//         res.status(200).json({
-//             message: 'Profile picture updated successfully',
-//             user: updatedUser
-//         });
-//     } catch (error) {
-//         console.error('Error updating profile picture:', error);
-//         res.status(500).json({ message: 'Internal Server Error' });
-//     }
-// };
 exports.updateProfilePicture = async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
@@ -269,3 +246,34 @@ exports.getUserNotifications = async (req, res) => {
         res.status(500).json({ status: false, error: error.message });
     }
 };
+
+exports.updatePassword = async (req, res, next) => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body;
+
+        // Validate required fields
+        if (!userId || !currentPassword || !newPassword) {
+            return res.status(400).json({ status: false, error: 'All fields are required' });
+        }
+
+        // Fetch the user from the database
+        const user = await UserService.getUserById(userId);
+        if (!user) {
+            return res.status(404).json({ status: false, error: 'User not found' });
+        }
+
+        // Compare current password with stored password
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({ status: false, error: 'Current password is incorrect' });
+        }
+
+        // Update the password
+        await UserService.updatePassword(userId, newPassword); // Call the service method to update password
+
+        res.json({ status: true, message: 'Password updated successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+

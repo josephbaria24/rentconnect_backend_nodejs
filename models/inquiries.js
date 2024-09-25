@@ -14,10 +14,15 @@ const inquirySchema = new mongoose.Schema({
     required: true 
 }, // Room
   status: { 
-    type: String, 
-    enum: ['reserved', 'rented', 'pending'], 
+    type: String,
+    enum: ['pending', 'approved', 'rejected'], 
     default: 'pending' 
-},
+  },
+  requestType: { 
+    type: String, 
+    enum: ['reservation', 'rent'], 
+    required: true 
+  }, // New field
   requestDate: { 
     type: Date, 
     default: Date.now 

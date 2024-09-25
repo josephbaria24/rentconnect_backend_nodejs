@@ -3,16 +3,31 @@
 const inquiryService = require('../services/inquiries.services');
 const Room = require('../models/room.model')
 const Inquiry = require('../models/inquiries')
+const RoomServices = require('../services/room.services')
 
 // Create a new inquiry
 const createInquiry = async (req, res) => {
   try {
-    const inquiry = await inquiryService.createInquiry(req.body);
+    const { userId, roomId, requestType } = req.body;
+
+    if (!['reservation', 'rent'].includes(requestType)) {
+      return res.status(400).json({ error: 'Invalid request type' });
+    }
+
+    const inquiry = new Inquiry({
+      userId,
+      roomId,
+      requestType, // Set requestType here
+      status: 'pending',
+    });
+
+    await inquiry.save();
     res.status(201).json(inquiry);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get inquiries for a specific user
 const getInquiriesByUserId = async (req, res) => {
@@ -35,14 +50,50 @@ const getInquiriesByRoomOwner = async (req, res) => {
 };
 
 // Update inquiry status
-const updateInquiryStatus = async (req, res) => {
+const updateInquiryAndRoom = async (req, res) => {
+  const { inquiryId } = req.params;
+  const { status, requestType, roomId, userId } = req.body;
+
   try {
-    const inquiry = await inquiryService.updateInquiryStatus(req.params.inquiryId, req.body.status);
-    res.status(200).json(inquiry);
+      // Log incoming request data
+      console.log('Incoming request data:', req.body);
+
+      // Update the inquiry status
+      const updatedInquiry = await Inquiry.findByIdAndUpdate(inquiryId, {
+          status: status,
+          requestType: requestType,
+          roomId: roomId,
+          userId: userId
+      }, { new: true });
+
+      // Log updated inquiry
+      console.log('Updated Inquiry:', updatedInquiry);
+
+      if (!updatedInquiry) {
+          return res.status(404).send('Inquiry not found');
+      }
+
+      // Ensure the room status is updated after the inquiry update
+      const updatedRoom = await Room.findByIdAndUpdate(roomId, {
+          roomStatus: 'reserved', // Set room status to reserved
+          $addToSet: { occupantUsers: userId } // Add userId to occupantUsers
+      }, { new: true });
+
+      // Log updated room
+      console.log('Updated Room:', updatedRoom);
+
+      if (!updatedRoom) {
+          return res.status(404).send('Room not found');
+      }
+
+      // Return the updated inquiry and room
+      res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+      console.error('Error updating inquiry and room:', error);
+      res.status(500).send('Server error');
   }
 };
+
 
 const getInquiriesByPropertyId = async (req, res) => {
   try {
@@ -122,6 +173,6 @@ module.exports = {
   createInquiry,
   getInquiriesByUserId,
   getInquiriesByRoomOwner,
-  updateInquiryStatus,
+  updateInquiryAndRoom,
   getInquiriesByPropertyId, // Add this line
 };

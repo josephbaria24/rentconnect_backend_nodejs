@@ -32,20 +32,19 @@ class RoomServices {
         return await RoomModel.findByIdAndDelete(id);
     }
     static async addUserToRoom(roomId, userId) {
-        const room = await RoomModel.findById(roomId).populate('occupantUsers');
+    const room = await RoomModel.findById(roomId).populate('occupantUsers');
 
-        if (room.occupantUsers.length + room.occupantNonUsers.length >= room.capacity) {
-            throw new Error('Room capacity reached');
-        }
-
-        if (room.occupantUsers.includes(userId)) {
-            throw new Error('User already occupies the room');
-        }
-
-        room.occupantUsers.push(userId);
-        return await room.save();
+    if (room.occupantUsers.length + room.occupantNonUsers.length >= room.capacity) {
+        throw new Error('Room capacity reached');
     }
 
+    if (room.occupantUsers.includes(userId)) {
+        throw new Error('User already occupies the room');
+    }
+
+    room.occupantUsers.push(userId);
+    return await room.save();
+}
     // Method to add non-users (occupants) to the room
     static async addNonUserToRoom(roomId, occupantData) {
         const room = await RoomModel.findById(roomId).populate('occupantNonUsers');

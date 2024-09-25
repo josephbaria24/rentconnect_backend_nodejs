@@ -8,12 +8,6 @@ const { Schema } = mongoose;
 
 
 const userSchema = new Schema({
-    // name: {
-    //     type: String,
-    //     lowercase: true,
-    //     required: true,
-    //     unique: true, 
-    // },
     email: {
        type: String,
        lowercase: true,
@@ -39,6 +33,9 @@ const userSchema = new Schema({
     isProfileComplete: {
         type: Boolean,
         default: false
+    },
+    last_login: {
+        type: Date,
     },
     created_at: {
         type: Date,

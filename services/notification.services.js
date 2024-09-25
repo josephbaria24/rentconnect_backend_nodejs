@@ -1,4 +1,12 @@
 const Notification = require('../models/notification.model');
+let io; // Define io here to use it in your service
+
+exports.setIoInstance = (socketIo) => {
+  io = socketIo; // Set the io instance
+};
+
+
+
 
 exports.createNotification = async (userId, message, status = 'unread', roomId = null, roomNumber = null, requesterEmail = null, inquiryId = null) => {
   try {
@@ -9,10 +17,16 @@ exports.createNotification = async (userId, message, status = 'unread', roomId =
       roomId,
       roomNumber,
       requesterEmail,
-      inquiryId // Include inquiryId here
+      inquiryId
     });
     await notification.save();
-    return notification; // Return the saved notification for further use
+    
+    // Emit the notification to the specific user
+    if (io) {
+      io.to(userId).emit('newNotification', notification); // Emit to the specific user
+    }
+    
+    return notification; 
   } catch (error) {
     console.error('Error creating notification:', error);
     throw new Error(error.message);

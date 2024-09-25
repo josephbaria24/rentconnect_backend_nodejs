@@ -59,7 +59,7 @@ const roomSchema = new Schema({
     },
     occupantUsers: [{
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: false,
     }],
     // Array for storing non-users (occupants)

@@ -14,11 +14,11 @@ router.get('/occupant/:userId', inquiryController.getInquiriesByUserId);
 router.get('/landlord/:ownerId', inquiryController.getInquiriesByRoomOwner);
 
 // Update inquiry status
-router.patch('/update/:inquiryId', inquiryController.updateInquiryStatus);
+router.patch('/update/:inquiryId', inquiryController.updateInquiryAndRoom);
 // Get inquiries for a specific property
 router.get('/properties/:propertyId/inquiries', inquiryController.getInquiriesByPropertyId);
 router.get('/rooms/:roomId', inquiryController.getInquiriesByRoomId);
 router.get('/check-pending', inquiryController.checkPendingInquiry);
-router.delete('/:inquiryId', inquiryController.deleteInquiry);
+router.delete('/delete/:inquiryId', inquiryController.deleteInquiry);
 
 module.exports = router;

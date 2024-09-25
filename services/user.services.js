@@ -1,6 +1,7 @@
 const UserModel = require('../models/user.model')
 const {ProfileModel} = require('../models/profile.model')
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs')
 
 class UserService{
     static async registerUser(email, password){
@@ -104,6 +105,21 @@ class UserService{
             throw error;
         }
     }
+    static async updatePassword(userId, newPassword) {
+        try {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+            
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { password: hashedPassword },
+                { new: true, runValidators: true } // Return the updated user
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    
     
     
     

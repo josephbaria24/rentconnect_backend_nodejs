@@ -15,7 +15,6 @@ router.patch('/updateProfilePicture/:userId', upload.any(), UserController.updat
 router.patch('/updateUserInfo', UserController.updateUserInfo);
 router.post('/createRentalRequest', UserController.createRentalRequest);
 router.get('/notifications/:userId', UserController.getUserNotifications);
-
-//router.get('/profilePicture/:userId', UserController.getProfilePicture);
+router.patch('/updatePassword', UserController.updatePassword);
 
 module.exports = router;

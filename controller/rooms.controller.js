@@ -95,13 +95,13 @@ exports.deleteRoom = async (req, res, next) => {
     }
 };
 
-exports.addUserToRoom = async (req, res, next) => {
+exports.addUserToRoom = async (req, res) => {
     try {
         const { roomId, userId } = req.body;
-        const room = await RoomServices.addUserToRoom(roomId, userId);
-        res.json({ status: true, success: room });
+        const updatedRoom = await RoomServices.addUserToRoom(roomId, userId);
+        res.status(200).json({ status: true, room: updatedRoom });
     } catch (error) {
-        next(error);
+        res.status(500).json({ status: false, error: error.message });
     }
 };
 
