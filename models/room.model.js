@@ -33,12 +33,12 @@ const roomSchema = new Schema({
         required: true
     },
     deposit: {
-        type: Number, // Deposit for the room (in months of rent)
-        required: true
+        type: String, // Deposit for the room (in months of rent)
+        required: false
     },
     advance: {
-        type: Number, // Advance payment (in months of rent)
-        required: true
+        type: String, // Advance payment (in months of rent)
+        required: false
     },
     roomStatus: {
         type: String,
