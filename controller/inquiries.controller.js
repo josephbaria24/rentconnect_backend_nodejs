@@ -50,6 +50,51 @@ const getInquiriesByRoomOwner = async (req, res) => {
 };
 
 // Update inquiry status
+// const updateInquiryAndRoom = async (req, res) => {
+//   const { inquiryId } = req.params;
+//   const { status, requestType, roomId, userId } = req.body;
+
+//   try {
+//       // Log incoming request data
+//       console.log('Incoming request data:', req.body);
+
+//       // Update the inquiry status
+//       const updatedInquiry = await Inquiry.findByIdAndUpdate(inquiryId, {
+//           status: status,
+//           requestType: requestType,
+//           roomId: roomId,
+//           userId: userId
+//       }, { new: true });
+
+//       // Log updated inquiry
+//       console.log('Updated Inquiry:', updatedInquiry);
+
+//       if (!updatedInquiry) {
+//           return res.status(404).send('Inquiry not found');
+//       }
+
+//       // Ensure the room status is updated after the inquiry update
+//       const updatedRoom = await Room.findByIdAndUpdate(roomId, {
+//           roomStatus: 'reserved', // Set room status to reserved
+//           $addToSet: { occupantUsers: userId } // Add userId to occupantUsers
+//       }, { new: true });
+
+//       // Log updated room
+//       console.log('Updated Room:', updatedRoom);
+
+//       if (!updatedRoom) {
+//           return res.status(404).send('Room not found');
+//       }
+
+//       // Return the updated inquiry and room
+//       res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
+//   } catch (error) {
+//       console.error('Error updating inquiry and room:', error);
+//       res.status(500).send('Server error');
+//   }
+// };
+
+
 const updateInquiryAndRoom = async (req, res) => {
   const { inquiryId } = req.params;
   const { status, requestType, roomId, userId } = req.body;
@@ -73,11 +118,23 @@ const updateInquiryAndRoom = async (req, res) => {
           return res.status(404).send('Inquiry not found');
       }
 
-      // Ensure the room status is updated after the inquiry update
-      const updatedRoom = await Room.findByIdAndUpdate(roomId, {
-          roomStatus: 'reserved', // Set room status to reserved
-          $addToSet: { occupantUsers: userId } // Add userId to occupantUsers
-      }, { new: true });
+      // Prepare room update data
+      let roomUpdateData = {
+          roomStatus: '',
+          $addToSet: { occupantUsers: userId }, // Add userId to occupantUsers
+      };
+
+      // Check the requestType and status to set the appropriate room status and date
+      if (requestType === 'reserve' && status === 'approved') {
+          roomUpdateData.roomStatus = 'reserved';
+          roomUpdateData.reservedDate = new Date(); // Set the reserved date to the current date
+      } else if (requestType === 'rent' && status === 'approved') {
+          roomUpdateData.roomStatus = 'rented';
+          roomUpdateData.rentedDate = new Date(); // Set the rented date to the current date
+      }
+
+      // Ensure the room status and dates are updated after the inquiry update
+      const updatedRoom = await Room.findByIdAndUpdate(roomId, roomUpdateData, { new: true });
 
       // Log updated room
       console.log('Updated Room:', updatedRoom);
