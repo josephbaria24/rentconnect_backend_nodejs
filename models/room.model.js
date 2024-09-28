@@ -49,6 +49,14 @@ const roomSchema = new Schema({
         type: Date, // Date type for the due date
         required: false // Optional field, adjust based on your needs
     },
+    rentedDate: {
+        type: Date, // Date when the room was rented
+        required: false
+    },
+    reservedDate: {
+        type: Date, // Date when the room was reserved
+        required: false
+    },
     reservationDuration: {
         type: Number, // Reservation duration (in days)
         required: true
