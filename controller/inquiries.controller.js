@@ -125,7 +125,7 @@ const updateInquiryAndRoom = async (req, res) => {
       };
 
       // Check the requestType and status to set the appropriate room status and date
-      if (requestType === 'reserve' && status === 'approved') {
+      if (requestType === 'reservation' && status === 'approved') {
           roomUpdateData.roomStatus = 'reserved';
           roomUpdateData.reservedDate = new Date(); // Set the reserved date to the current date
       } else if (requestType === 'rent' && status === 'approved') {
