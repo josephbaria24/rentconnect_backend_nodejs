@@ -23,6 +23,7 @@ exports.createRoom = async (req, res, next) => {
                 dueDate: room.dueDate,
                 reservationDuration: room.reservationDuration,
                 reservationFee: room.reservationFee,
+                
             };
 
             // Attach the corresponding photos
@@ -72,6 +73,14 @@ exports.updateRoom = async (req, res, next) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
+
+        // Check if the roomStatus is being updated to 'reserved' or 'rented'
+        if (updateData.roomStatus === 'reserved') {
+            updateData.reservedDate = new Date(); // Set reserved date to current date
+        } else if (updateData.roomStatus === 'rented') {
+            updateData.rentedDate = new Date(); // Set rented date to current date
+        }
+
         const updatedRoom = await RoomServices.updateRoom(id, updateData);
         if (!updatedRoom) {
             return res.status(404).json({ status: false, error: 'Room not found' });
@@ -81,6 +90,21 @@ exports.updateRoom = async (req, res, next) => {
         next(error);
     }
 };
+
+
+// exports.updateRoom = async (req, res, next) => {
+//     try {
+//         const { id } = req.params;
+//         const updateData = req.body;
+//         const updatedRoom = await RoomServices.updateRoom(id, updateData);
+//         if (!updatedRoom) {
+//             return res.status(404).json({ status: false, error: 'Room not found' });
+//         }
+//         res.json({ status: true, room: updatedRoom });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 
 exports.deleteRoom = async (req, res, next) => {
     try {
@@ -99,6 +123,7 @@ exports.addUserToRoom = async (req, res) => {
     try {
         const { roomId, userId } = req.body;
         const updatedRoom = await RoomServices.addUserToRoom(roomId, userId);
+        await 
         res.status(200).json({ status: true, room: updatedRoom });
     } catch (error) {
         res.status(500).json({ status: false, error: error.message });

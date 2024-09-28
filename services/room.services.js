@@ -15,9 +15,30 @@ class RoomServices {
         return await RoomModel.findById(id);
     }
 
-    static async updateRoom(id, updateData) {
-        return await RoomModel.findByIdAndUpdate(id, updateData, { new: true });
+    static async updateRoom(roomId, updateData) {
+        try {
+            const room = await RoomModel.findById(roomId);
+    
+            if (!room) {
+                throw new Error('Room not found');
+            }
+    
+            // Update the room with the new data
+            Object.assign(room, updateData);
+    
+            // Save the updated room data to the database
+            await room.save();
+    
+            return room;
+        } catch (error) {
+            console.error('Error updating room:', error);
+            throw new Error('Failed to update room');
+        }
     }
+    
+    // static async updateRoom(id, updateData) {
+    //     return await RoomModel.findByIdAndUpdate(id, updateData, { new: true });
+    // }
 
     static async deleteRoom(id) {
         return await RoomModel.findByIdAndDelete(id);
@@ -58,16 +79,15 @@ class RoomServices {
     // Method to reserve a room and set the reservedDate
     static async reserveRoom(roomId) {
         const room = await RoomModel.findById(roomId);
-
+    
         if (room.roomStatus === 'available') {
             room.roomStatus = 'reserved';
-            room.reservedDate = new Date(); // Set the reservation date
+            room.reservedDate = new Date(); // Explicitly set reservedDate here
             return await room.save();
         } else {
             throw new Error('Room is not available for reservation');
         }
     }
-
     // Method to rent a room and set the rentedDate
     static async rentRoom(roomId) {
         const room = await RoomModel.findById(roomId);
