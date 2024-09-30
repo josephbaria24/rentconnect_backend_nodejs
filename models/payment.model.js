@@ -18,6 +18,10 @@ const paymentSchema = new Schema({
         ref: 'Room', // Reference to the Room (Room model)
         required: true
     },
+    proofOfReservation: {
+        type: String, // URL or path to the proof of reservation (photo)
+        required: false // Optional, adjust based on your needs
+    },
     monthlyPayments: [{
         month: {
             type: String, // Month of the payment (e.g., "September 2024")

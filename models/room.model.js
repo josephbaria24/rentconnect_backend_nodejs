@@ -28,6 +28,7 @@ const roomSchema = new Schema({
         type: Number, // Price for the room (e.g., per month)
         required: true
     },
+
     capacity: {
         type: Number, // Capacity in terms of number of persons
         required: true

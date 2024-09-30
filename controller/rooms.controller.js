@@ -30,7 +30,6 @@ exports.createRoom = async (req, res, next) => {
             roomData.photo1 = req.files.find(file => file.fieldname === `rooms[${index}][photo1]`)?.path || null;
             roomData.photo2 = req.files.find(file => file.fieldname === `rooms[${index}][photo2]`)?.path || null;
             roomData.photo3 = req.files.find(file => file.fieldname === `rooms[${index}][photo3]`)?.path || null;
-
             console.log(`Room ${index} data:`, roomData); // Log the room data to debug
 
             // Ensure all required fields are present
