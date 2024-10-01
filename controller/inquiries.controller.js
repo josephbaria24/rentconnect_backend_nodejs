@@ -43,8 +43,12 @@ const getInquiriesByUserId = async (req, res) => {
 const getInquiriesByRoomOwner = async (req, res) => {
   try {
     const inquiries = await inquiryService.getInquiriesByRoomOwner(req.params.ownerId);
+    
+    console.log("Inquiries retrieved:", inquiries); // Log the inquiries for debugging
+    
     res.status(200).json(inquiries);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

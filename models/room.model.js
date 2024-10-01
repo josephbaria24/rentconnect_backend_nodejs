@@ -94,7 +94,10 @@ const roomSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'RentalRequest',
         required: false
-    }]
+    }],
+    ownerId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'user' }
 });
 
 const RoomModel = db.model('Room', roomSchema, 'rooms');

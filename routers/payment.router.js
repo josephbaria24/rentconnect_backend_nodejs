@@ -4,7 +4,7 @@ const PaymentController = require('../controller/payment.controller');
 const upload = require('../multerConfig'); // For file uploads
 
 // Route to create a new monthly payment for a room
-router.post('/createMonthlyPayment', upload.single('proofOfPayment'), PaymentController.createMonthlyPayment);
+router.post('/createMonthlyPayment', upload.array('proofOfPayment'), PaymentController.createMonthlyPayment);
 
 router.post('/uploadProofOfReservation', upload.single('proofOfReservation'), PaymentController.uploadProofOfReservation);
 
@@ -18,5 +18,9 @@ router.put('/updateProofOfPayment', upload.single('proofOfPayment'), PaymentCont
 
 // Route to get proof of reservation by room ID
 router.get('/room/:roomId/proofOfReservation', PaymentController.getProofOfReservationByRoomId);
+
+
+router.post('/addMonthlyPayment', PaymentController.addMonthlyPayment);
+
 
 module.exports = router;

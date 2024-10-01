@@ -10,10 +10,9 @@ exports.register = async(req,res,next)=>{
         const successRes = await UserService.registerUser(email, password);
         res.json({status:true, success:"User Registered Successfully"});
     } catch(error) {
-        res.status(500).json({ status: false, error: error.message });
+        res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
     }
 }
-
 
 exports.login = async(req,res,next)=>{
     try{
@@ -22,13 +21,14 @@ exports.login = async(req,res,next)=>{
         const user = await UserService.checkuser(email);
 
         if(!user){
-            throw new Error('User dont exist');
+            return res.status(404).json({ status: false, error: 'User does not exist.' });
         }
 
         const isMatch = await user.comparePassword(password);
-        if(isMatch === false) {
-            throw new Error('Password invalid');
+        if(!isMatch) {
+            return res.status(400).json({ status: false, error: 'Invalid password. Please try again.' });
         }
+
         user.last_login = new Date();
         await user.save();
 
@@ -37,7 +37,8 @@ exports.login = async(req,res,next)=>{
         res.status(200).json({status:true, token:token})
 
     } catch(error) {
-        throw error
+        console.error('Error in login:', error);
+        res.status(500).json({ status: false, error: 'Login failed. Please try again.' });
     }
 }
 
@@ -48,12 +49,13 @@ exports.getUserEmailById = async (req, res, next) => {
         const user = await UserService.getUserById(userId);
 
         if (!user) {
-            return res.status(404).json({ status: false, error: 'User not found' });
+            return res.status(404).json({ status: false, error: 'User not found.' });
         }
 
         res.json({ status: true, email: user.email });
     } catch (error) {
-        next(error);
+        console.error('Error fetching user email:', error);
+        res.status(500).json({ status: false, error: 'Failed to fetch user email. Please try again.' });
     }
 };
 
@@ -63,9 +65,11 @@ exports.addBookmark = async (req, res, next) => {
         const user = await UserService.addBookmark(userId, propertyId);
         res.json({ status: true, user });
     } catch (error) {
-        next(error);
+        console.error('Error adding bookmark:', error);
+        res.status(500).json({ status: false, error: 'Failed to add bookmark. Please try again.' });
     }
 };
+
 
 exports.removeBookmark = async (req, res, next) => {
     try {
@@ -251,29 +255,24 @@ exports.updatePassword = async (req, res, next) => {
     try {
         const { userId, currentPassword, newPassword } = req.body;
 
-        // Validate required fields
         if (!userId || !currentPassword || !newPassword) {
-            return res.status(400).json({ status: false, error: 'All fields are required' });
+            return res.status(400).json({ status: false, error: 'All fields are required.' });
         }
 
-        // Fetch the user from the database
         const user = await UserService.getUserById(userId);
         if (!user) {
-            return res.status(404).json({ status: false, error: 'User not found' });
+            return res.status(404).json({ status: false, error: 'User not found.' });
         }
 
-        // Compare current password with stored password
         const isMatch = await user.comparePassword(currentPassword);
         if (!isMatch) {
-            return res.status(400).json({ status: false, error: 'Current password is incorrect' });
+            return res.status(400).json({ status: false, error: 'Current password is incorrect.' });
         }
 
-        // Update the password
-        await UserService.updatePassword(userId, newPassword); // Call the service method to update password
-
-        res.json({ status: true, message: 'Password updated successfully' });
+        await UserService.updatePassword(userId, newPassword);
+        res.json({ status: true, message: 'Password updated successfully.' });
     } catch (error) {
-        next(error);
+        console.error('Error updating password:', error);
+        res.status(500).json({ status: false, error: 'Failed to update password. Please try again.' });
     }
 };
-
