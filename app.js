@@ -9,6 +9,7 @@ const adminRouter = require('./routers/admin.router');
 const notificationRouter = require('./routers/notification.router');
 const inquiryRoutes = require('./routers/inquiries.router');
 const paymentRouter = require('./routers/payment.router')
+const otpRouter = require('./routers/otp.routes')
 const http = require('http');
 const socketIo = require('socket.io');
 
@@ -30,6 +31,8 @@ app.use('/notification', notificationRouter);
 app.use('/', adminRouter);
 app.use('/inquiries', inquiryRoutes);
 app.use('/payment', paymentRouter);
+app.use('/', otpRouter);
+
 
 // Set the io instance in your notification service
 const notificationService = require('./services/notification.services');

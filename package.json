@@ -11,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.3",
+    "@sendinblue/client": "^3.3.1",
     "axios": "^1.7.7",
     "backblaze-b2": "^1.7.0",
     "bcrypt": "^5.1.1",
@@ -24,7 +26,9 @@
     "mongoose": "^8.6.0",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^6.9.15",
     "nodemon": "^3.1.4",
+    "otp-generator": "^4.0.1",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "request-promise-native": "^1.0.9",

@@ -50,7 +50,15 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Property' // Assuming you have a 'Property' model
     }
-]
+    ],
+    verificationCode: {
+        type: String,
+        required: false, // This will hold the verification code
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false, // This will track if the email is verified
+    },
 });
 
 

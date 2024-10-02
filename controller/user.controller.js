@@ -4,15 +4,15 @@ const NotificationService = require('../services/notification.services');
 const upload = require('../multerConfig');
 const path = require('path');
 
-exports.register = async(req,res,next)=>{
-    try{
-        const { email, password } = req.body;
-        const successRes = await UserService.registerUser(email, password);
-        res.json({status:true, success:"User Registered Successfully"});
-    } catch(error) {
-        res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
-    }
-}
+// exports.register = async(req,res,next)=>{
+//     try{
+//         const { email, password } = req.body;
+//         const successRes = await UserService.registerUser(email, password);
+//         res.json({status:true, success:"User Registered Successfully"});
+//     } catch(error) {
+//         res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
+//     }
+// }
 
 exports.login = async(req,res,next)=>{
     try{
@@ -274,5 +274,34 @@ exports.updatePassword = async (req, res, next) => {
     } catch (error) {
         console.error('Error updating password:', error);
         res.status(500).json({ status: false, error: 'Failed to update password. Please try again.' });
+    }
+};
+
+
+exports.register = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+
+        // Register user and send OTP for email verification
+        const successRes = await UserService.registerUser(email, password);
+        res.json({ status: true, success: "User Registered. Check your email for OTP." });
+    } catch (error) {
+        res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
+    }
+};
+
+// New endpoint to verify OTP
+exports.verifyEmailOTP = async (req, res, next) => {
+    try {
+        const { email, otp, hash } = req.body;
+        const verifiedUser = await UserService.verifyEmailOTP(email, otp, hash);
+
+        if (verifiedUser) {
+            return res.status(200).json({ status: true, message: "Email verified successfully." });
+        }
+
+        res.status(400).json({ status: false, message: "OTP verification failed." });
+    } catch (error) {
+        res.status(500).json({ status: false, error: 'OTP verification failed. Please try again.' });
     }
 };
