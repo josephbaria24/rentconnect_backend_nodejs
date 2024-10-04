@@ -286,10 +286,12 @@ exports.register = async (req, res, next) => {
         const successRes = await UserService.registerUser(email, password);
         res.json({ status: true, success: "User Registered. Check your email for OTP." });
     } catch (error) {
+        if (error.message === 'Email already registered') {
+            return res.status(400).json({ status: false, error: 'Email already registered' });
+        }
         res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
     }
 };
-
 // New endpoint to verify OTP
 exports.verifyEmailOTP = async (req, res, next) => {
     try {

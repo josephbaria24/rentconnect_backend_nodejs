@@ -20,22 +20,28 @@ class UserService{
     // }
     static async registerUser(email, password) {
         try {
+            // Check if the email already exists
+            const existingUser = await UserModel.findOne({ email });
+            if (existingUser) {
+                throw new Error('Email already registered');
+            }
+    
             // Create user
             const createUser = new UserModel({ email, password });
-
+    
             // Generate OTP for email verification
             const otpParams = { email }; // Just pass the email, OTP generation logic is in otp.services.js
             otpService.sendOTP(otpParams, async (error, fullHash) => {
                 if (error) throw error;
-
+    
                 // Save the OTP hash and email in user document
                 createUser.verificationCode = fullHash;
                 await createUser.save();
             });
-
+    
             return await createUser.save();
         } catch (err) {
-            throw err;
+            throw err; // Rethrow error for controller to catch
         }
     }
     static async verifyEmailOTP(email, otp) {
