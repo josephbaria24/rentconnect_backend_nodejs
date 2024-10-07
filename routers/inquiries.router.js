@@ -20,5 +20,7 @@ router.get('/properties/:propertyId/inquiries', inquiryController.getInquiriesBy
 router.get('/rooms/:roomId', inquiryController.getInquiriesByRoomId);
 router.get('/check-pending', inquiryController.checkPendingInquiry);
 router.delete('/delete/:inquiryId', inquiryController.deleteInquiry);
+router.put('/inquiries/mark-as-occupied/:roomId', inquiryController.markRoomAsOccupied);
+
 
 module.exports = router;

@@ -23,6 +23,10 @@ const inquirySchema = new mongoose.Schema({
     enum: ['reservation', 'rent'], 
     required: true 
   }, // New field
+  isRented: { // New field to indicate if the inquiry is now rented
+    type: Boolean,
+    default: false
+  },
   requestDate: { 
     type: Date, 
     default: Date.now 

@@ -5,12 +5,12 @@ const { Schema } = mongoose;
 const paymentSchema = new Schema({
     occupantId: {
         type: Schema.Types.ObjectId,
-        ref: 'User', // Reference to the Occupant (User model)
+        ref: 'user', // Reference to the Occupant (User model)
         required: true
     },
     landlordId: {
         type: Schema.Types.ObjectId,
-        ref: 'User', // Reference to the Landlord (User model)
+        ref: 'user', // Reference to the Landlord (User model)
         required: true
     },
     roomId: {

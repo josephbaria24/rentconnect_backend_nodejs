@@ -28,7 +28,6 @@ const roomSchema = new Schema({
         type: Number, // Price for the room (e.g., per month)
         required: true
     },
-
     capacity: {
         type: Number, // Capacity in terms of number of persons
         required: true
@@ -58,6 +57,19 @@ const roomSchema = new Schema({
         type: Date, // Date when the room was reserved
         required: false
     },
+    
+    // New Field: Move-In Date
+    moveInDate: {
+        type: Date, // Date when the occupant can move in
+        required: false // Optional field, only required when reservation is confirmed
+    },
+    
+    // New Field: Reservation Expiration Date
+    reservationExpiration: {
+        type: Date, // Expiration date for the reservation
+        required: false // Optional field
+    },
+    
     reservationDuration: {
         type: Number, // Reservation duration (in days)
         required: true
@@ -85,10 +97,10 @@ const roomSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    reservations: [{
+    reservationInquirers: [{
         type: Schema.Types.ObjectId,
-        ref: 'Reservation',
-        required: false
+        ref: 'user',
+        required: false,
     }],
     rentalRequests: [{
         type: Schema.Types.ObjectId,
@@ -97,7 +109,8 @@ const roomSchema = new Schema({
     }],
     ownerId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'user' }
+        ref: 'user' 
+    }
 });
 
 const RoomModel = db.model('Room', roomSchema, 'rooms');

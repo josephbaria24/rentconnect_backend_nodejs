@@ -20,7 +20,9 @@ router.put('/updateProofOfPayment', upload.single('proofOfPayment'), PaymentCont
 router.get('/room/:roomId/proofOfReservation', PaymentController.getProofOfReservationByRoomId);
 
 
-router.post('/addMonthlyPayment', PaymentController.addMonthlyPayment);
+router.post('/addMonthlyPayment',upload.single('proofOfPayment'), PaymentController.addMonthlyPayment);
+
+router.post('/createOrAddMonthlyPayment', upload.array('proofOfPayment'), PaymentController.createOrAddMonthlyPayment);
 
 
 module.exports = router;
