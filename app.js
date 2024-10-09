@@ -113,7 +113,7 @@ const rejectLapsedInquiries = async () => {
 };
 
 // Schedule the cron job to run every day at midnight
-cron.schedule('* * * * *', () => {
+cron.schedule('0 0 * * *', () => {
   console.log('Checking for lapsed inquiries...');
   rejectLapsedInquiries();
 });
