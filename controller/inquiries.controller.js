@@ -9,27 +9,48 @@ const { calculateRemainingTime } = require('../utils/timeUtils');
 // Create a new inquiry
 const createInquiry = async (req, res) => {
   try {
-    const { userId, roomId, requestType,reservationDuration } = req.body;
+    const { 
+      userId, 
+      roomId, 
+      requestType, 
+      reservationDuration, 
+      proposedStartDate, 
+      customTerms 
+    } = req.body;
 
     if (!['reservation', 'rent'].includes(requestType)) {
       return res.status(400).json({ error: 'Invalid request type' });
     }
 
-    const inquiry = new Inquiry({
+    // Validate reservationDuration if requestType is 'reservation'
+    if (requestType === 'reservation' && (!reservationDuration || reservationDuration <= 0)) {
+      return res.status(400).json({ error: 'Reservation duration is required for reservation inquiries.' });
+    }
+
+    const inquiryData = {
       userId,
       roomId,
-      requestType, // Set requestType here
+      requestType,
       status: 'pending',
-      reservationDuration
-      
-    });
+      proposedStartDate,
+      customTerms,
+    };
 
+    // Only add reservationDuration if requestType is 'reservation'
+    if (requestType === 'reservation') {
+      inquiryData.reservationDuration = reservationDuration;
+    }
+
+    const inquiry = new Inquiry(inquiryData);
     await inquiry.save();
+
     res.status(201).json(inquiry);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 
 // Get inquiries for a specific user
@@ -57,59 +78,61 @@ const getInquiriesByRoomOwner = async (req, res) => {
 };
 
 const updateInquiryAndApprove = async (req, res) => {
-  const { inquiryId } = req.params; // Use params for inquiryId
-  const { status, requestType, roomId, userId, reservationDuration } = req.body;
+  const { inquiryId } = req.params;
+  const { 
+    status, 
+    requestType, 
+    roomId, 
+    userId, 
+    reservationDuration, 
+    proposedStartDate, 
+    customTerms 
+  } = req.body;
 
   try {
-    console.log('Incoming request data:', req.body);
+    const updateData = {
+      status: status,
+      requestType: requestType,
+      approvalDate: new Date(),
+      proposedStartDate: proposedStartDate, // Include proposed start date
+      customTerms: customTerms // Include custom terms
+    };
 
-    // Update the inquiry status
+    // Only update reservationDuration if requestType is 'reservation'
+    if (requestType === 'reservation' && reservationDuration) {
+      updateData.reservationDuration = reservationDuration;
+    }
+
     const updatedInquiry = await Inquiry.findByIdAndUpdate(
       inquiryId,
-      {
-        status: status,
-        requestType: requestType,
-        approvalDate: new Date(), // Set the approval date
-        reservationDuration: reservationDuration // Update reservation duration
-      },
+      updateData,
       { new: true }
     );
-
-    console.log('Updated Inquiry:', updatedInquiry);
 
     if (!updatedInquiry) {
       return res.status(404).send('Inquiry not found');
     }
 
-    // Prepare room update data
-    let roomUpdateData = {
-      roomStatus: '',
-    };
+    let roomUpdateData = { roomStatus: '' };
 
-    // Modify logic based on requestType and status
     if (requestType === 'reservation' && status === 'approved') {
       roomUpdateData.roomStatus = 'reserved';
-      roomUpdateData.reservedDate = new Date(); // Set the reserved date
-      roomUpdateData.$addToSet = { reservationInquirers: userId }; // Add to reservationInquirers
+      roomUpdateData.reservedDate = new Date();
+      roomUpdateData.$addToSet = { reservationInquirers: userId };
     } else if (requestType === 'rent' && status === 'approved') {
       roomUpdateData.roomStatus = 'occupied';
-      roomUpdateData.rentedDate = new Date(); // Set the rented date
-      roomUpdateData.$addToSet = { occupantUsers: userId }; // Add to occupantUsers
+      roomUpdateData.rentedDate = new Date();
+      roomUpdateData.$addToSet = { occupantUsers: userId };
     }
 
-    // Ensure the room status and dates are updated after the inquiry update
     const updatedRoom = await Room.findByIdAndUpdate(roomId, roomUpdateData, { new: true });
-
-    console.log('Updated Room:', updatedRoom);
 
     if (!updatedRoom) {
       return res.status(404).send('Room not found');
     }
 
-    // Return the updated inquiry and room
     res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
   } catch (error) {
-    console.error('Error updating inquiry and approving:', error);
     res.status(500).send('Server error');
   }
 };

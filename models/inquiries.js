@@ -17,9 +17,11 @@ const inquirySchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'rejected'], 
     default: 'pending' 
   },
-  reservationDuration: {  // New field for reservation duration
-    type: Number,        // Assuming it's in days
-    required: true
+  reservationDuration: {  
+    type: Number,
+    required: function() {
+      return this.requestType === 'reservation'; // Only required if requestType is 'reservation'
+    }
   },
   requestType: { 
     type: String, 
@@ -46,6 +48,15 @@ const inquirySchema = new mongoose.Schema({
     deposit: Number,
     advance: Number,
   },
+  proposedStartDate: { // New field for proposed start date
+    type: Date,
+    required: false // optional, as not all requests might include this
+  },
+  customTerms: { // New field for custom terms/messages
+    type: String,
+    required: false
+  }
+
 });
 
 module.exports = db.model('Inquiry', inquirySchema);
