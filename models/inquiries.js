@@ -1,5 +1,4 @@
-// models/inquiry.js
-const db = require('../config/db')
+const db = require('../config/db');
 const mongoose = require('mongoose');
 
 const inquirySchema = new mongoose.Schema({
@@ -7,16 +6,20 @@ const inquirySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'user', 
     required: true 
-}, // Occupant
+  }, // Occupant
   roomId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Room', 
     required: true 
-}, // Room
+  }, // Room
   status: { 
     type: String,
     enum: ['pending', 'approved', 'rejected'], 
     default: 'pending' 
+  },
+  reservationDuration: {  // New field for reservation duration
+    type: Number,        // Assuming it's in days
+    required: true
   },
   requestType: { 
     type: String, 
@@ -30,10 +33,13 @@ const inquirySchema = new mongoose.Schema({
   requestDate: { 
     type: Date, 
     default: Date.now 
-},
+  },
   responseDate: {
-     type: Date 
-    },
+    type: Date 
+  },
+  approvalDate: { // New field for the date of approval
+    type: Date
+  },
   details: {
     price: Number,
     capacity: Number,

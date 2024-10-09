@@ -22,7 +22,7 @@ exports.createRoom = async (req, res, next) => {
                 advance: room.advance,
                 roomStatus: room.roomStatus,
                 dueDate: room.dueDate,
-                reservationDuration: room.reservationDuration,
+                //reservationDuration: room.reservationDuration,
                 reservationFee: room.reservationFee,
             };
 
@@ -35,7 +35,7 @@ exports.createRoom = async (req, res, next) => {
 
             // Ensure all required fields are present
             if (!roomData.propertyId || !roomData.roomNumber || !roomData.photo1 || !roomData.price || !roomData.capacity ||
-                !roomData.deposit || !roomData.advance || !roomData.reservationDuration || !roomData.reservationFee) {
+                !roomData.deposit || !roomData.advance || !roomData.reservationFee) {
                 throw new Error(`Missing required fields for room ${index}`);
             }
 
@@ -215,3 +215,30 @@ exports.requestRent = async (req, res) => {
 };
 
 
+exports.reserveRoom = async (req, res) => {
+    try {
+        const { roomId, userId, reservationDuration } = req.body;
+
+        // Find the room
+        const room = await RoomModel.findById(roomId);
+        if (!room || room.roomStatus !== 'available') {
+            return res.status(400).json({ status: false, error: 'Room is not available for reservation' });
+        }
+
+        // Calculate reservation expiration
+        const reservedDate = new Date();
+        const reservationExpiration = new Date(reservedDate.getTime() + reservationDuration * 24 * 60 * 60 * 1000);
+
+        // Update room status to 'reserved'
+        room.roomStatus = 'reserved';
+        room.reservedDate = reservedDate;
+        room.reservationExpiration = reservationExpiration;
+
+        await room.save();
+
+        res.json({ status: true, room });
+    } catch (error) {
+        console.error('Error reserving room:', error);
+        res.status(500).json({ status: false, error: error.message });
+    }
+};

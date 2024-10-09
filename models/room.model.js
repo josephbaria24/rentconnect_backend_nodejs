@@ -72,11 +72,11 @@ const roomSchema = new Schema({
     
     reservationDuration: {
         type: Number, // Reservation duration (in days)
-        required: true
+        required: false
     },
     reservationFee: {
         type: Number, // Fee for reserving the room
-        required: true
+        required: false
     },
     occupantUsers: [{
         type: Schema.Types.ObjectId,

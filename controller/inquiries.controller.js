@@ -4,11 +4,12 @@ const inquiryService = require('../services/inquiries.services');
 const Room = require('../models/room.model')
 const Inquiry = require('../models/inquiries')
 const RoomServices = require('../services/room.services')
-
+const cron = require('node-cron');
+const { calculateRemainingTime } = require('../utils/timeUtils');
 // Create a new inquiry
 const createInquiry = async (req, res) => {
   try {
-    const { userId, roomId, requestType } = req.body;
+    const { userId, roomId, requestType,reservationDuration } = req.body;
 
     if (!['reservation', 'rent'].includes(requestType)) {
       return res.status(400).json({ error: 'Invalid request type' });
@@ -19,6 +20,8 @@ const createInquiry = async (req, res) => {
       roomId,
       requestType, // Set requestType here
       status: 'pending',
+      reservationDuration
+      
     });
 
     await inquiry.save();
@@ -53,76 +56,24 @@ const getInquiriesByRoomOwner = async (req, res) => {
   }
 };
 
-
-// const updateInquiryAndRoom = async (req, res) => {
-//   const { inquiryId } = req.params;
-//   const { status, requestType, roomId, userId } = req.body;
-
-//   try {
-//       // Log incoming request data
-//       console.log('Incoming request data:', req.body);
-
-//       // Update the inquiry status
-//       const updatedInquiry = await Inquiry.findByIdAndUpdate(inquiryId, {
-//           status: status,
-//           requestType: requestType,
-//           roomId: roomId,
-//           userId: userId
-//       }, { new: true });
-
-//       // Log updated inquiry
-//       console.log('Updated Inquiry:', updatedInquiry);
-
-//       if (!updatedInquiry) {
-//           return res.status(404).send('Inquiry not found');
-//       }
-
-//       // Prepare room update data
-//       let roomUpdateData = {
-//           roomStatus: '',
-//           $addToSet: { occupantUsers: userId }, // Add userId to occupantUsers
-//       };
-
-//       // Check the requestType and status to set the appropriate room status and date
-//       if (requestType === 'reservation' && status === 'approved') {
-//           roomUpdateData.roomStatus = 'reserved';
-//           roomUpdateData.reservedDate = new Date(); // Set the reserved date to the current date
-//       } else if (requestType === 'rent' && status === 'approved') {
-//           roomUpdateData.roomStatus = 'occupied';
-//           roomUpdateData.rentedDate = new Date(); // Set the rented date to the current date
-//       }
-
-//       // Ensure the room status and dates are updated after the inquiry update
-//       const updatedRoom = await Room.findByIdAndUpdate(roomId, roomUpdateData, { new: true });
-
-//       // Log updated room
-//       console.log('Updated Room:', updatedRoom);
-
-//       if (!updatedRoom) {
-//           return res.status(404).send('Room not found');
-//       }
-
-//       // Return the updated inquiry and room
-//       res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
-//   } catch (error) {
-//       console.error('Error updating inquiry and room:', error);
-//       res.status(500).send('Server error');
-//   }
-// };
-const updateInquiryAndRoom = async (req, res) => {
-  const { inquiryId } = req.params;
-  const { status, requestType, roomId, userId } = req.body;
+const updateInquiryAndApprove = async (req, res) => {
+  const { inquiryId } = req.params; // Use params for inquiryId
+  const { status, requestType, roomId, userId, reservationDuration } = req.body;
 
   try {
     console.log('Incoming request data:', req.body);
 
     // Update the inquiry status
-    const updatedInquiry = await Inquiry.findByIdAndUpdate(inquiryId, {
-      status: status,
-      requestType: requestType,
-      roomId: roomId,
-      userId: userId
-    }, { new: true });
+    const updatedInquiry = await Inquiry.findByIdAndUpdate(
+      inquiryId,
+      {
+        status: status,
+        requestType: requestType,
+        approvalDate: new Date(), // Set the approval date
+        reservationDuration: reservationDuration // Update reservation duration
+      },
+      { new: true }
+    );
 
     console.log('Updated Inquiry:', updatedInquiry);
 
@@ -158,11 +109,10 @@ const updateInquiryAndRoom = async (req, res) => {
     // Return the updated inquiry and room
     res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
   } catch (error) {
-    console.error('Error updating inquiry and room:', error);
+    console.error('Error updating inquiry and approving:', error);
     res.status(500).send('Server error');
   }
 };
-
 
 
 
@@ -268,6 +218,79 @@ const markRoomAsOccupied = async (req, res) => {
   }
 };
 
+cron.schedule('0 0 * * *', async () => {
+  const now = new Date();
+  
+  try {
+    // Fetch inquiries that are not rented and have exceeded their reservation duration
+    const inquiriesToReject = await Inquiry.find({
+      isRented: false,
+      status: 'approved', // Only check approved inquiries
+      approvalDate: { $lt: new Date(now.getTime() - reservationDuration * 24 * 60 * 60 * 1000) } // Check if duration has passed
+    });
+
+    // Update the status of these inquiries to 'rejected'
+    for (const inquiry of inquiriesToReject) {
+      inquiry.status = 'rejected';
+      await inquiry.save();
+    }
+    
+    console.log('Rejected inquiries:', inquiriesToReject.length);
+  } catch (error) {
+    console.error('Error rejecting inquiries:', error);
+  }
+});
+
+const rejectLapsedInquiries = async () => {
+  try {
+    const currentDate = new Date();
+
+    // Find all inquiries that have been approved
+    const inquiriesToReject = await Inquiry.find({
+      status: 'approved',
+      approvalDate: { $exists: true }, // Ensure there is an approval date
+      reservationDuration: { $exists: true }, // Ensure there is a reservation duration
+    });
+
+    for (const inquiry of inquiriesToReject) {
+      const approvalDate = new Date(inquiry.approvalDate); // Use approval date
+      const endDate = new Date(approvalDate); // Set end date based on approval date
+      endDate.setDate(endDate.getDate() + inquiry.reservationDuration); // Add duration to end date
+
+      // Check if the current date has exceeded the end date
+      if (currentDate > endDate) {
+        inquiry.status = 'rejected'; // Update status to rejected
+        await inquiry.save(); // Save the updated inquiry
+        console.log(`Inquiry ${inquiry._id} has been rejected due to lapsed duration.`);
+      }
+    }
+  } catch (error) {
+    console.error('Error rejecting lapsed inquiries:', error);
+  }
+};
+
+
+const getInquiries = async (req, res) => {
+  try {
+    const inquiries = await Inquiry.find({ userId: req.user.id });
+
+    const inquiriesWithRemainingTime = inquiries.map(inquiry => {
+      const remainingTime = calculateRemainingTime(inquiry.approvalDate, inquiry.reservationDuration);
+      return {
+        ...inquiry._doc, // spread the inquiry fields
+        remainingTime // add remaining time
+      };
+    });
+
+    res.status(200).json(inquiriesWithRemainingTime);
+  } catch (error) {
+    console.error('Error fetching inquiries:', error);
+    res.status(500).send('Server error');
+  }
+};
+
+
+
 
 module.exports = {
   deleteInquiry,
@@ -276,7 +299,10 @@ module.exports = {
   createInquiry,
   getInquiriesByUserId,
   getInquiriesByRoomOwner,
-  updateInquiryAndRoom,
+  updateInquiryAndApprove,
   getInquiriesByPropertyId, 
-  markRoomAsOccupied,// Add this line
+  markRoomAsOccupied,
+  rejectLapsedInquiries,
+  getInquiries
+  // Add this line
 };

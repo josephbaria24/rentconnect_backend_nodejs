@@ -14,7 +14,7 @@ router.get('/occupant/:userId', inquiryController.getInquiriesByUserId);
 router.get('/landlord/:ownerId', inquiryController.getInquiriesByRoomOwner);
 
 // Update inquiry status
-router.patch('/update/:inquiryId', inquiryController.updateInquiryAndRoom);
+router.patch('/update/:inquiryId', inquiryController.updateInquiryAndApprove);
 // Get inquiries for a specific property
 router.get('/properties/:propertyId/inquiries', inquiryController.getInquiriesByPropertyId);
 router.get('/rooms/:roomId', inquiryController.getInquiriesByRoomId);
