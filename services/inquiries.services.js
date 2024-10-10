@@ -12,6 +12,9 @@ const createInquiry = async (data) => {
 const getInquiriesByUserId = async (userId) => {
   return await Inquiry.find({ userId }).populate('roomId');
 };
+const getInquiriesByUserEmail = async (userId) => {
+  return await Inquiry.find({ userId }).populate('roomId');
+};
 
 // Fetch inquiries for rooms associated with a landlord
 const getInquiriesByRoomOwner = async (ownerId) => {

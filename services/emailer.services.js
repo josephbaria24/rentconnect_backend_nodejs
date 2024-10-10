@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
+// Function to send verification email
 async function sendVerificationEmail(email, otp, callback) {
-    // Construct the email body with HTML
     const htmlBody = `
         <div style="font-family: Arial, sans-serif; text-align: center;">
             <h2>Dear ${email},</h2>
@@ -37,6 +37,84 @@ async function sendVerificationEmail(email, otp, callback) {
     });
 }
 
+// Function to send notification email to the landlord
+async function sendNotificationEmail(landlordEmail, message, callback) {
+    const htmlBody = `
+        <div style="font-family: Arial, sans-serif; text-align: center;">
+            <h2>Dear User,</h2>
+            <p>${message}</p>
+            <p>Best regards,</p>
+            <p>The RentConnect Team</p>
+        </div>
+    `;
+
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, 
+        auth: {
+            user: '7d268b001@smtp-brevo.com',
+            pass: 'BwGgTIEQmzCOHqZ1'
+        }
+    });
+
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com', // App's email
+        to: landlordEmail, // Landlord's email
+        subject: "New Inquiry Notification",
+        html: htmlBody,
+        replyTo: 'rentconnect.it@gmail.com' // Set the landlord's email as reply-to
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
+
+// Function to send notification email to the occupant
+async function sendOccupantNotificationEmail(occupantEmail, message, callback) {
+    const htmlBody = `
+        <div style="font-family: Arial, sans-serif; text-align: center;">
+            <h2>Dear Occupant,</h2>
+            <p>${message}</p>
+            <p>Best regards,</p>
+            <p>The RentConnect Team</p>
+        </div>
+    `;
+
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, 
+        auth: {
+            user: '7d268b001@smtp-brevo.com',
+            pass: 'BwGgTIEQmzCOHqZ1'
+        }
+    });
+
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com', // App's email
+        to: occupantEmail, // Occupant's email
+        subject: "Inquiry Update Notification",
+        html: htmlBody,
+        replyTo: 'rentconnect.it@gmail.com' // Set the occupant's email as reply-to
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
+
 module.exports = {
-    sendVerificationEmail
+    sendVerificationEmail,
+    sendNotificationEmail,
+    sendOccupantNotificationEmail // Export the occupant email function
 };

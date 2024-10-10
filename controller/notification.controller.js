@@ -1,16 +1,17 @@
 const notificationService = require('../services/notification.services');
 const Notification = require('../models/notification.model');
+const emailService = require('../services/emailer.services');
 
-// Controller to create a notification (called after property approval)
 exports.createNotification = async (req, res) => {
   const { userId, message, roomId, roomNumber, requesterEmail, inquiryId } = req.body;
 
   // Check if required fields are provided
-  if (!userId || !message) {
-    return res.status(400).json({ status: false, error: 'userId and message are required' });
+  if (!userId || !message || !requesterEmail) {
+    return res.status(400).json({ status: false, error: 'userId, message, and requesterEmail are required' });
   }
 
   try {
+    // Create notification in the database
     const notification = await notificationService.createNotification(
       userId, 
       message, 
@@ -20,7 +21,18 @@ exports.createNotification = async (req, res) => {
       requesterEmail,
       inquiryId // Pass inquiryId to the service
     );
-    res.status(201).json({ status: true, notification });
+
+    // Send email notification using landlord's email
+    emailService.sendNotificationEmail(requesterEmail, message, (error, info) => {
+      if (error) {
+        console.error('Error sending notification email:', error);
+        // Optionally, log the notification creation even if the email fails
+        return res.status(500).json({ status: true, notification, emailError: 'Failed to send email notification' });
+      }
+      console.log('Notification email sent:', info.response);
+      return res.status(201).json({ status: true, notification });
+    });
+
   } catch (error) {
     res.status(500).json({ status: false, error: error.message });
   }

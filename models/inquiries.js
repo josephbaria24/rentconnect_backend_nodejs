@@ -55,6 +55,10 @@ const inquirySchema = new mongoose.Schema({
   customTerms: { // New field for custom terms/messages
     type: String,
     required: false
+  },
+  rejectionReason: {  // New field for storing the rejection reason
+    type: String,
+    required: false
   }
 
 });

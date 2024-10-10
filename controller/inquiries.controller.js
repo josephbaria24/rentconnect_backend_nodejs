@@ -52,11 +52,45 @@ const createInquiry = async (req, res) => {
 
 
 
+const rejectInquiry = async (req, res) => {
+  const { inquiryId } = req.params;
+  const { reason } = req.body; // Get the rejection reason from the request body
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    // Update inquiry status and store the rejection reason
+    inquiry.status = 'rejected';
+    inquiry.rejectionReason = reason; // Store the rejection reason
+    await inquiry.save();
+
+    return res.status(200).json({ message: 'Inquiry rejected successfully', inquiry });
+  } catch (error) {
+    console.error('Error rejecting inquiry:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
 
 // Get inquiries for a specific user
 const getInquiriesByUserId = async (req, res) => {
   try {
     const inquiries = await inquiryService.getInquiriesByUserId(req.params.userId);
+    res.status(200).json(inquiries);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+const getInquiriesByUserEmail = async (req, res) => {
+  try {
+    const inquiries = await inquiryService.getInquiriesByUserId(req.params.userEmail);
     res.status(200).json(inquiries);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -312,6 +346,26 @@ const getInquiries = async (req, res) => {
   }
 };
 
+const getPropertyByRoomId = async (req, res) => {
+  try {
+    const roomId = req.params.roomId;
+
+    // Find the room using the roomId and populate the propertyId
+    const room = await Room.findById(roomId).populate('propertyId');
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Return the populated property details
+    return res.status(200).json(room.propertyId);
+  } catch (error) {
+    console.error('Error fetching property by roomId:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
 
 
 
@@ -326,6 +380,9 @@ module.exports = {
   getInquiriesByPropertyId, 
   markRoomAsOccupied,
   rejectLapsedInquiries,
-  getInquiries
-  // Add this line
+  getInquiries,
+  rejectInquiry,
+  getInquiriesByUserEmail,
+  getPropertyByRoomId
+
 };

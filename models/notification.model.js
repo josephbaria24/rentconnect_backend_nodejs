@@ -31,7 +31,6 @@ const NotificationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['unread', 'read'],
     default: 'unread'
   },
   created_at: {
