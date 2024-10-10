@@ -227,6 +227,8 @@ const checkPendingInquiry = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 const deleteInquiry = async (req, res) => {
   try {
     const inquiryId = req.params.inquiryId;
