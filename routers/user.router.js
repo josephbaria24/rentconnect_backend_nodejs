@@ -4,6 +4,7 @@ const UserController = require('../controller/user.controller');
 const upload = require('../multerConfig');
 const otpService = require('../services/otp.services');
 const { sendVerificationEmail } = require('../services/emailer.services'); // Your email service
+const { sendResetPasswordEmail } = require('../services/emailer.services'); // Your email service
 const User = require('../models/user.model'); // Your User model
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -94,7 +95,7 @@ router.post('/forgot-password', async (req, res) => {
     </div>
     `;
 
-        await sendVerificationEmail(email, htmlBody, (error) => {
+        await sendResetPasswordEmail(email, htmlBody, (error) => {
             if (error) {
                 return res.status(500).json({ message: 'Error sending email', error });
             }

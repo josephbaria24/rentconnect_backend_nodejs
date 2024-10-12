@@ -36,6 +36,33 @@ async function sendVerificationEmail(email, otp, callback) {
         }
     });
 }
+// Function to send verification email
+async function sendResetPasswordEmail(email, htmlBody, callback) {
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // use TLS
+        auth: {
+            user: '7d268b001@smtp-brevo.com',  // Your Brevo login
+            pass: 'BwGgTIEQmzCOHqZ1'          // Your Brevo password
+        }
+    });
+
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com',  // Replace with your verified sender email
+        to: email,                         // Recipient's email
+        subject: "Reset Your RentConnect Password", // Updated subject
+        html: htmlBody                     // HTML body passed as argument
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
 
 // Function to send notification email to the landlord
 async function sendNotificationEmail(landlordEmail, message, callback) {
@@ -116,5 +143,6 @@ async function sendOccupantNotificationEmail(occupantEmail, message, callback) {
 module.exports = {
     sendVerificationEmail,
     sendNotificationEmail,
-    sendOccupantNotificationEmail // Export the occupant email function
+    sendOccupantNotificationEmail,
+    sendResetPasswordEmail // Export the occupant email function
 };
