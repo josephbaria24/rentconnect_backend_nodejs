@@ -58,6 +58,7 @@
 
 // app.js
 // app.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cron = require('node-cron'); // Import node-cron
@@ -82,6 +83,7 @@ const io = socketIo(server); // Create Socket.IO server
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Reject lapsed inquiries function

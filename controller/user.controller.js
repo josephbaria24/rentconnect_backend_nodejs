@@ -14,33 +14,69 @@ const path = require('path');
 //     }
 // }
 
-exports.login = async(req,res,next)=>{
-    try{
+exports.login = async (req, res, next) => {
+    try {
         const { email, password } = req.body;
 
         const user = await UserService.checkuser(email);
 
-        if(!user){
+        if (!user) {
             return res.status(404).json({ status: false, error: 'User does not exist.' });
         }
 
+        // Log user data for debugging
+        console.log("User from database:", user);
+
         const isMatch = await user.comparePassword(password);
-        if(!isMatch) {
+
+        // Log provided password and comparison result
+        console.log("Provided password:", password);
+        console.log("Password match result:", isMatch);
+
+        if (!isMatch) {
             return res.status(400).json({ status: false, error: 'Invalid password. Please try again.' });
         }
 
         user.last_login = new Date();
         await user.save();
 
-        let tokenData = {_id:user._id,email:user.email};
-        const token = await UserService.generateToken(tokenData,"secretKey",'2d');
-        res.status(200).json({status:true, token:token})
+        let tokenData = { _id: user._id, email: user.email };
+        const token = await UserService.generateToken(tokenData, "secretKey", '2d');
+        res.status(200).json({ status: true, token: token });
 
-    } catch(error) {
+    } catch (error) {
         console.error('Error in login:', error);
         res.status(500).json({ status: false, error: 'Login failed. Please try again.' });
     }
 }
+
+// exports.login = async(req,res,next)=>{
+//     try{
+//         const { email, password } = req.body;
+
+//         const user = await UserService.checkuser(email);
+
+//         if(!user){
+//             return res.status(404).json({ status: false, error: 'User does not exist.' });
+//         }
+
+//         const isMatch = await user.comparePassword(password);
+//         if(!isMatch) {
+//             return res.status(400).json({ status: false, error: 'Invalid password. Please try again.' });
+//         }
+
+//         user.last_login = new Date();
+//         await user.save();
+
+//         let tokenData = {_id:user._id,email:user.email};
+//         const token = await UserService.generateToken(tokenData,"secretKey",'2d');
+//         res.status(200).json({status:true, token:token})
+
+//     } catch(error) {
+//         console.error('Error in login:', error);
+//         res.status(500).json({ status: false, error: 'Login failed. Please try again.' });
+//     }
+// }
 
 exports.getUserEmailById = async (req, res, next) => {
     try {
@@ -274,6 +310,28 @@ exports.updatePassword = async (req, res, next) => {
     } catch (error) {
         console.error('Error updating password:', error);
         res.status(500).json({ status: false, error: 'Failed to update password. Please try again.' });
+    }
+};
+
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { userId, token, newPassword } = req.body;
+
+        // Validate the token here (pseudo code)
+        const isValidToken = await validateToken(userId, token);
+        if (!isValidToken) {
+            return res.status(400).json({ status: false, error: 'Invalid token' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await UserModel.findByIdAndUpdate(userId, { password: hashedPassword });
+
+        res.json({ status: true, message: 'Password updated successfully.' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ status: false, error: 'Failed to reset password. Please try again.' });
     }
 };
 

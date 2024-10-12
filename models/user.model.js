@@ -59,6 +59,14 @@ const userSchema = new Schema({
         type: Boolean,
         default: false, // This will track if the email is verified
     },
+    resetPasswordToken: {
+        type: String,
+        required: false, // Not required for all users
+    },
+    resetPasswordExpires: {
+        type: Date,
+        required: false, // Not required for all users
+    },
 });
 
 
@@ -87,6 +95,7 @@ userSchema.methods.comparePassword = async function(userPassword){
         throw error
     }
 }
+
 
 const UserModel = db.model('user', userSchema);
 
