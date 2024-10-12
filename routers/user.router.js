@@ -65,34 +65,35 @@ router.post('/forgot-password', async (req, res) => {
         const resetLink = `https://rentconnect-backend-nodejs.onrender.com/reset-password/${resetToken}`; // Use your local IP address
 
         const htmlBody = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-            <div style="text-align: center; background-color: #295F98; padding: 10px; border-radius: 10px 10px 0 0;">
-                <h2 style="color: white; font-size: 24px;">RentConnect</h2>
+        <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <div style="text-align: center; background-color: #295F98; padding: 20px; border-radius: 10px 10px 0 0;">
+                <h2 style="color: white; font-size: 28px;">RentConnect</h2>
             </div>
 
-            <div style="padding: 20px; text-align: center;">
-                <h3 style="font-size: 20px; color: #333;">Password Reset Request</h3>
-                <p style="font-size: 16px; color: #555;">
+            <div style="padding: 30px; text-align: center;">
+                <h3 style="font-size: 24px; color: #333;">Password Reset Request</h3>
+                <p style="font-size: 18px; color: #555;">
                     Hello,
                 </p>
-                <p style="font-size: 16px; color: #555;">
+                <p style="font-size: 18px; color: #555;">
                     We received a request to reset your password for your RentConnect account. Click the button below to reset your password:
                 </p>
                 <a href="${resetLink}" 
-                    style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; font-size: 16px; border-radius: 5px;">
+                    style="display: inline-block; margin: 20px 0; padding: 16px 32px; background-color: #4CAF50; color: white; text-decoration: none; font-size: 18px; border-radius: 5px;">
                     Reset Password
                 </a>
-                <p style="font-size: 14px; color: #555;">
+                <p style="font-size: 16px; color: #555;">
                     If you didn't request this, you can safely ignore this email. This link will expire in one hour.
                 </p>
             </div>
 
-            <div style="background-color: #f1f1f1; padding: 10px; text-align: center; border-radius: 0 0 10px 10px;">
-                <p style="font-size: 12px; color: #999;">
+            <div style="background-color: #f1f1f1; padding: 15px; text-align: center; border-radius: 0 0 10px 10px;">
+                <p style="font-size: 14px; color: #999;">
                     RentConnect | Ensuring Safe and Compliant Property Connections
                 </p>
             </div>
         </div>
+
     `;
 
         await sendVerificationEmail(email, htmlBody, (error) => {
