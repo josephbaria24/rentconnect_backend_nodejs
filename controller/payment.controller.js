@@ -2,38 +2,6 @@ const PaymentServices = require('../services/payment.services');
 const PaymentModel = require('../models/payment.model')
 const mongoose = require('mongoose');
 
-
-// exports.createMonthlyPayment = async (req, res) => {
-//     try {
-//         const { occupantId, landlordId, roomId, monthlyPayments } = req.body;
-
-//         // Process the uploaded files for proof of payment
-//         const proofsOfPayment = req.files.map(file => file.path); // Array of paths to uploaded files
-
-//         // Prepare the payment document
-//         const paymentData = {
-//             occupantId,
-//             landlordId,
-//             roomId,
-//             proofOfReservation: req.body.proofOfReservation || null,
-//             monthlyPayments: monthlyPayments.map((payment, index) => ({
-//                 ...payment,
-//                 // Ensure status is a single string and not an array
-//                 status: Array.isArray(payment.status) ? payment.status[0] : payment.status, 
-//                 proofOfPayment: proofsOfPayment[index] || null // Link the uploaded file, if applicable
-//             }))
-//         };
-
-//         const newPayment = new PaymentModel(paymentData);
-//         await newPayment.save();
-
-//         res.status(201).json({ message: "Monthly payment created successfully", payment: newPayment });
-//     } catch (error) {
-//         console.error('Error creating/updating payment:', error);
-//         res.status(500).json({ message: 'Error creating/updating payment', error: error.message });
-//     }
-// };
-
 exports.createMonthlyPayment = async (req, res) => {
     try {
         const { occupantId, landlordId, roomId, monthlyPayments } = req.body;
@@ -268,3 +236,76 @@ exports.uploadProofOfReservation = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   }
+
+  exports.deleteProofOfPayment = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const { month } = req.body;
+
+        // Find the payment record for the room
+        const payment = await PaymentModel.findOne({ roomId });
+
+        if (!payment) {
+            return res.status(404).json({ message: 'No payment records found for this room.' });
+        }
+
+        // Find the specific monthly payment by month
+        const monthlyPayment = payment.monthlyPayments.find(p => p.month === month);
+        if (!monthlyPayment) {
+            return res.status(404).json({ message: `No payment found for the month: ${month}` });
+        }
+
+        // Delete the proof of payment
+        monthlyPayment.proofOfPayment = null;
+        monthlyPayment.updated_at = Date.now();
+
+        // Save the updated payment record
+        await payment.save();
+
+        res.status(200).json({ message: 'Proof of payment deleted successfully', payment });
+    } catch (error) {
+        console.error('Error deleting proof of payment:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.deleteProof = async (req, res) => {
+    const { roomId, month, type } = req.params;
+
+    try {
+        // Find the payment record by roomId
+        const paymentRecord = await PaymentModel.findOne({ roomId });
+
+        if (!paymentRecord) {
+            return res.status(404).json({ status: false, message: 'Payment not found.' });
+        }
+
+        if (type === 'reservation') {
+            // Delete proof of reservation
+            if (paymentRecord.proofOfReservation) {
+                paymentRecord.proofOfReservation = null;
+                await paymentRecord.save();
+                return res.json({ status: true, message: 'Proof of reservation deleted successfully.' });
+            } else {
+                return res.status(404).json({ status: false, message: 'Proof of reservation does not exist.' });
+            }
+        } else if (type === 'payment') {
+            // Delete proof of payment for the specified month
+            const monthlyPayment = paymentRecord.monthlyPayments.find(mp => mp.month === month);
+
+            if (monthlyPayment && monthlyPayment.proofOfPayment) {
+                monthlyPayment.proofOfPayment = null;
+                await paymentRecord.save();
+                return res.json({ status: true, message: 'Proof of payment deleted successfully.' });
+            } else {
+                return res.status(404).json({ status: false, message: 'Proof of payment for this month does not exist.' });
+            }
+        } else {
+            return res.status(400).json({ status: false, message: 'Invalid proof type.' });
+        }
+
+    } catch (error) {
+        return res.status(500).json({ status: false, message: 'Server error', error });
+    }
+};
+

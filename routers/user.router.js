@@ -63,7 +63,8 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         // Create reset link
-        const resetLink = `https://rentconnect-backend-nodejs.onrender.com/reset-password/${resetToken}`; // Use your local IP address
+        //const resetLink = `https://rentconnect-backend-nodejs.onrender.com/reset-password/${resetToken}`; // Use your local IP address
+        const resetLink = `http://192.168.1.19:3000/reset-password/${resetToken}`; // Use your local IP address
 
         const htmlBody = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <div style="text-align: center; background-color: #295F98; padding: 10px; border-radius: 10px 10px 0 0;">
@@ -180,6 +181,9 @@ router.get('/reset-password/:token', async (req, res) => {
     `);
 });
 
+
+
+
 // Reset Password Route
 router.post('/reset-password/:token', async (req, res) => {
     const { token } = req.params;
@@ -192,7 +196,48 @@ router.post('/reset-password/:token', async (req, res) => {
         });
 
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired token' });
+            return res.status(400).send(`
+                <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            background-color: #f8f8f8;
+                            color: #333;
+                            text-align: center;
+                            padding: 50px;
+                        }
+                        h1 {
+                            color: #c0392b;
+                        }
+                        p {
+                            font-size: 16px;
+                            margin: 20px 0;
+                        }
+                        a {
+                            color: #2980b9;
+                            text-decoration: none;
+                        }
+                        a:hover {
+                            text-decoration: underline;
+                        }
+                        .container {
+                            background: white;
+                            border-radius: 8px;
+                            padding: 20px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>Invalid or expired token</h1>
+                        <p>The token you provided is either invalid or has expired. Please request a new password reset link.</p>
+                        <p><a href="rentconnect://forgot-password">Request New Link</a></p>
+                    </div>
+                </body>
+                </html>
+            `);
         }
 
         // Update the password directly without manual hashing
@@ -204,10 +249,91 @@ router.post('/reset-password/:token', async (req, res) => {
 
         await user.save(); // This will trigger the pre-save middleware to hash the password
 
-        res.status(200).json({ message: 'Password has been reset successfully' });
+        res.status(200).send(`
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f8f8f8;
+                        color: #333;
+                        text-align: center;
+                        padding: 50px;
+                    }
+                    h1 {
+                        color: #27ae60;
+                    }
+                    p {
+                        font-size: 16px;
+                        margin: 20px 0;
+                    }
+                    a {
+                        color: #2980b9;
+                        text-decoration: none;
+                    }
+                    a:hover {
+                        text-decoration: underline;
+                    }
+                    .container {
+                        background: white;
+                        border-radius: 8px;
+                        padding: 20px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Password Reset Successful</h1>
+                    <p>Your password has been reset successfully. You can now login to the RentConnect App with your new password.</p>
+                    <p><a href="rentconnect://login">Log In</a></p>
+                </div>
+            </body>
+            </html>
+        `);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error', error });
+        res.status(500).send(`
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f8f8f8;
+                        color: #333;
+                        text-align: center;
+                        padding: 50px;
+                    }
+                    h1 {
+                        color: #c0392b;
+                    }
+                    p {
+                        font-size: 16px;
+                        margin: 20px 0;
+                    }
+                    a {
+                        color: #2980b9;
+                        text-decoration: none;
+                    }
+                    a:hover {
+                        text-decoration: underline;
+                    }
+                    .container {
+                        background: white;
+                        border-radius: 8px;
+                        padding: 20px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Server Error</h1>
+                    <p>There was a problem with the server. Please try again later.</p>
+                </div>
+            </body>
+            </html>
+        `);
     }
 });
 

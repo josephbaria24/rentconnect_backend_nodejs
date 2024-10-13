@@ -17,14 +17,21 @@ exports.updateProfile = async (req, res) => {
         address,
       },
       isProfileComplete,
+      profileStatus: 'pending', // Set profile status to pending
       updated_at: Date.now(),
     };
 
+    // Call to the service to update the profile
     const profile = await ProfileService.updateProfile(userId, updateData);
 
-    res.status(200).json({ status: true, profile });
+    if (profile) {
+      return res.status(200).json({ status: true, profile });
+    } else {
+      return res.status(400).json({ status: false, message: 'Profile not found' });
+    }
   } catch (error) {
-    res.status(500).json({ status: false, error: error.message });
+    console.error('Error updating profile:', error);
+    return res.status(500).json({ status: false, error: error.message });
   }
 };
 

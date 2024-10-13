@@ -23,6 +23,9 @@ router.get('/room/:roomId/proofOfReservation', PaymentController.getProofOfReser
 router.post('/addMonthlyPayment',upload.single('proofOfPayment'), PaymentController.addMonthlyPayment);
 
 router.post('/createOrAddMonthlyPayment', upload.array('proofOfPayment'), PaymentController.createOrAddMonthlyPayment);
+// Route to delete proof of payment for a specific month
+router.delete('/room/:roomId/proofOfPayment', PaymentController.deleteProofOfPayment);
 
+router.delete('/room/:roomId/payment/:month/proof/:type', PaymentController.deleteProof); 
 
 module.exports = router;
