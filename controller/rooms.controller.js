@@ -33,10 +33,15 @@ exports.createRoom = async (req, res, next) => {
 
             console.log(`Room ${index} data:`, roomData); // Log the room data to debug
 
-            // Ensure all required fields are present
-            if (!roomData.propertyId || !roomData.roomNumber || !roomData.photo1 || !roomData.price || !roomData.capacity ||
+            // Ensure required fields are present but allow for missing photos
+            if (!roomData.propertyId || !roomData.roomNumber || !roomData.price || !roomData.capacity ||
                 !roomData.deposit || !roomData.advance || !roomData.reservationFee) {
                 throw new Error(`Missing required fields for room ${index}`);
+            }
+
+            // Check if at least one photo is provided
+            if (!roomData.photo1 && !roomData.photo2 && !roomData.photo3) {
+                throw new Error(`At least one photo is required for room ${index}`);
             }
 
             // Fetch the property to get the ownerId
@@ -59,7 +64,6 @@ exports.createRoom = async (req, res, next) => {
         res.status(400).send({ error: error.message });
     }
 };
-
 
 
 exports.getRoom = async (req, res, next) => {
