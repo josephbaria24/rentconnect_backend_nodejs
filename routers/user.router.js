@@ -64,7 +64,7 @@ router.post('/forgot-password', async (req, res) => {
 
         // Create reset link
         //const resetLink = `https://rentconnect-backend-nodejs.onrender.com/reset-password/${resetToken}`; // Use your local IP address
-        const resetLink = `http://192.168.1.19:3000/reset-password/${resetToken}`; // Use your local IP address
+        const resetLink = `https://rentconnect-backend-nodejs.onrender.com/reset-password/${resetToken}`; // Use your local IP address
 
         const htmlBody = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <div style="text-align: center; background-color: #295F98; padding: 10px; border-radius: 10px 10px 0 0;">
