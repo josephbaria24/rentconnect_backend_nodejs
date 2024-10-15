@@ -59,8 +59,12 @@ const inquirySchema = new mongoose.Schema({
   rejectionReason: {  // New field for storing the rejection reason
     type: String,
     required: false
-  }
+  },
+  moveInDate: {
+    type: Date, 
+},
 
 });
+
 
 module.exports = db.model('Inquiry', inquirySchema);

@@ -58,12 +58,6 @@ const roomSchema = new Schema({
         required: false
     },
     
-    // New Field: Move-In Date
-    moveInDate: {
-        type: Date, // Date when the occupant can move in
-        required: false // Optional field, only required when reservation is confirmed
-    },
-    
     // New Field: Reservation Expiration Date
     reservationExpiration: {
         type: Date, // Expiration date for the reservation

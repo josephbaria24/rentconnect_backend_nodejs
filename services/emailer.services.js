@@ -140,9 +140,81 @@ async function sendOccupantNotificationEmail(occupantEmail, message, callback) {
     });
 }
 
+async function sendRentalAgreementEmail(
+    landlordEmail,
+    landlordFullName,
+    landlordContactDetails, // Expecting an object with phone and address
+    occupantEmail,
+    occupantFullName,
+    occupantContactDetails, // Expecting an object with phone and address
+    rentalAgreement,
+    callback
+) {
+    const htmlBody = `
+        <div style="font-family: Arial, sans-serif; margin: 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; max-width: 600px; margin: auto;">
+            <h2 style="text-align: center; color: #4CAF50;">Rental Agreement</h2>
+            <p style="text-align: right;">Date: ${new Date().toLocaleDateString()}</p>
+
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <h4 style="margin: 0;">Agreement Between:</h4>
+                <p style="margin: 5px 0;"><strong>Landlord:</strong> ${landlordFullName} (Email: ${landlordEmail})</p>
+                <p style="margin: 5px 0;"><strong>Phone:</strong> ${landlordContactDetails.phone}</p>
+                <p style="margin: 5px 0;"><strong>Address:</strong> ${landlordContactDetails.address}</p>
+                <p style="margin: 5px 0;"><strong>Occupant:</strong> ${occupantFullName} (Email: ${occupantEmail})</p>
+                <p style="margin: 5px 0;"><strong>Phone:</strong> ${occupantContactDetails.phone}</p>
+                <p style="margin: 5px 0;"><strong>Address:</strong> ${occupantContactDetails.address}</p>
+                <p style="margin: 5px 0;"><strong>Room ID:</strong> ${rentalAgreement.roomId}</p>
+            </div>
+
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <h4 style="margin: 0;">Terms of Agreement:</h4>
+                <p style="margin: 5px 0;"><strong>Monthly Rent:</strong> ₱${rentalAgreement.monthlyRent}</p>
+                <p style="margin: 5px 0;"><strong>Security Deposit:</strong> ${rentalAgreement.securityDeposit}</p>
+                <p style="margin: 5px 0;"><strong>Lease Start Date:</strong> ${rentalAgreement.leaseStartDate.toLocaleDateString()}</p>
+                <p style="margin: 5px 0;"><strong>Lease End Date:</strong> ${rentalAgreement.leaseEndDate ? rentalAgreement.leaseEndDate.toLocaleDateString() : 'To be determined'}</p>
+                <p style="margin: 5px 0;"><strong>Terms:</strong> ${rentalAgreement.terms}</p>
+                <p style="margin: 5px 0;"><strong>Status:</strong> ${rentalAgreement.status}</p>
+            </div>
+
+            <footer style="text-align: center; margin-top: 40px; font-size: 12px; color: #888;">
+                <p>&copy; ${new Date().getFullYear()} RentConnect. All rights reserved.</p>
+            </footer>
+        </div>
+    `;
+
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // use TLS
+        auth: {
+            user: '7d268b001@smtp-brevo.com',  // Your Brevo login
+            pass: 'BwGgTIEQmzCOHqZ1'          // Your Brevo password
+        }
+    });
+
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com',  // Replace with your verified sender email
+        to: [landlordEmail, occupantEmail], // Recipients' emails
+        subject: "Your Rental Agreement",
+        html: htmlBody // HTML body of the email
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
+
+
+
+
 module.exports = {
     sendVerificationEmail,
     sendNotificationEmail,
     sendOccupantNotificationEmail,
-    sendResetPasswordEmail // Export the occupant email function
+    sendResetPasswordEmail,
+    sendRentalAgreementEmail // Export the occupant email function
 };
