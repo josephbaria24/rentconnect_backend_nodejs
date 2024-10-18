@@ -46,6 +46,14 @@ router.patch('/:roomId/occupy', async (req, res) => {
         isRented: true
       }
     );
+    await Inquiry.updateOne(
+      { roomId: roomId, userId: userId, requestType: 'rent' },
+      {
+        moveInDate: new Date(),
+        status: 'approved',
+        isRented: true
+      }
+    );
 
     // Fetch room details to create a rental agreement
     const room = await Room.findById(roomId);

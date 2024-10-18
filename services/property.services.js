@@ -1,4 +1,7 @@
 const PropertyModel = require('../models/properties.model');
+const RoomModel = require('../models/room.model');
+const InquiryModel = require('../models/inquiries');
+
 
 class PropertyServices {
     static async createProperty(userId, description, photo, photo2, photo3, legalDocPhoto, legalDocPhoto2, legalDocPhoto3, street, barangay, city, amenities, status, typeOfProperty, location) {
@@ -52,14 +55,33 @@ class PropertyServices {
         }
     }
     static async deletePropertyById(propertyId) {
+        // Find and delete the property
+        const property = await PropertyModel.findByIdAndDelete(propertyId);
+        
+        if (!property) {
+            return null; // Property not found
+        }
+    
+        // Delete associated rooms
+        await RoomModel.deleteMany({ propertyId });
+    
+        // Delete associated inquiries
+        await InquiryModel.deleteMany({ roomId: { $in: property.rooms } });
+    
+        return property; // Return the deleted property for confirmation
+    }
+    // Add the update method in PropertyServices
+
+    static async updateProperty(propertyId, updates) {
         try {
-            // Remove the property by its ID
-            const result = await PropertyModel.findByIdAndDelete(propertyId);
-            return result;
+            const updatedProperty = await PropertyModel.findByIdAndUpdate(propertyId, updates, { new: true });
+            return updatedProperty;
         } catch (error) {
             throw error;
         }
     }
+
+    
 }
 
 module.exports = PropertyServices;

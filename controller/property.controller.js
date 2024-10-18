@@ -110,14 +110,31 @@ exports.getBookmarkedProperties = async (req, res) => {
 
 exports.deleteProperty = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const result = await PropertyServices.deletePropertyById(id);
+        const { id } = req.params; // Get the property ID from the request parameters
+        const result = await PropertyServices.deletePropertyById(id); // Call the service method
 
         if (!result) {
             return res.status(404).json({ status: false, error: 'Property not found' });
         }
 
-        res.json({ status: true, message: 'Property deleted successfully' });
+        res.json({ status: true, message: 'Property and its associated rooms and inquiries deleted successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.updateProperty = async (req, res, next) => {
+    try {
+        const { propertyId } = req.params;
+        const updates = req.body;
+
+        const updatedProperty = await PropertyServices.updateProperty(propertyId, updates);
+
+        if (!updatedProperty) {
+            return res.status(404).json({ status: false, error: 'Property not found' });
+        }
+
+        res.json({ status: true, property: updatedProperty });
     } catch (error) {
         next(error);
     }
