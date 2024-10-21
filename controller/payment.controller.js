@@ -38,6 +38,73 @@ exports.createMonthlyPayment = async (req, res) => {
 };
 
 
+
+
+exports.updatePaymentStatus = async (req, res) => {
+    const { paymentId, monthlyPaymentId, status } = req.body;
+
+    // Log the incoming request data
+    console.log('Incoming request data:');
+    console.log('Payment ID:', paymentId);
+    console.log('Monthly Payment ID:', monthlyPaymentId);
+    console.log('Status:', status);
+
+    // Input validation
+    if (!paymentId || !monthlyPaymentId || !status) {
+        return res.status(400).json({ message: "Invalid input: Missing required fields." });
+    }
+
+    try {
+        // Convert IDs to ObjectId for MongoDB query
+        const paymentObjectId = mongoose.Types.ObjectId(paymentId);
+        const monthlyPaymentObjectId = mongoose.Types.ObjectId(monthlyPaymentId);
+
+        // Log converted ObjectIds
+        console.log('Converted Payment Object ID:', paymentObjectId);
+        console.log('Converted Monthly Payment Object ID:', monthlyPaymentObjectId);
+
+        // Find the specific payment record by its ID and the monthly payment by its sub-document ID
+        const payment = await PaymentModel.findOne({
+            _id: paymentObjectId,
+            'monthlyPayments._id': monthlyPaymentObjectId
+        });
+
+        // Log the retrieved payment
+        console.log('Retrieved payment:', payment);
+
+        // Check if payment record exists
+        if (!payment) {
+            console.log(`No payment records found for Payment ID: ${paymentId}, Monthly Payment ID: ${monthlyPaymentId}`);
+            return res.status(404).json({ message: "Payment not found" });
+        }
+
+        // Update the status of the specific monthly payment inside the array
+        const updateResult = await PaymentModel.updateOne(
+            { _id: paymentObjectId, 'monthlyPayments._id': monthlyPaymentObjectId },
+            {
+                $set: {
+                    'monthlyPayments.$.status': status,
+                    'monthlyPayments.$.updated_at': new Date() // Update timestamp
+                }
+            }
+        );
+
+        // Check if the update was successful
+        if (updateResult.nModified === 0) {
+            console.log(`No updates were made for Payment ID: ${paymentId}, Monthly Payment ID: ${monthlyPaymentId}`);
+            return res.status(400).json({ message: "No updates made to the payment status." });
+        }
+
+        res.status(200).json({
+            message: "Payment status updated successfully",
+        });
+    } catch (error) {
+        console.error('Error updating payment status:', error);
+        res.status(500).json({ message: 'Error updating payment status', error: error.message });
+    }
+};
+
+
 exports.createOrAddMonthlyPayment = async (req, res) => {
     const { occupantId, landlordId, roomId, monthlyPayments } = req.body;
     const proofsOfPayment = req.files.map(file => file.path); // Process the proof of payment files

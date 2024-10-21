@@ -62,9 +62,127 @@ const inquirySchema = new mongoose.Schema({
   },
   moveInDate: {
     type: Date, 
-},
+  },
 
+  // Updated structure for room bills
+  roomBills: [{
+    electricity: { 
+      amount: { 
+        type: Number 
+      },
+      dueDate: { 
+        type: Date 
+      },
+      isPaid: { 
+        type: Boolean, 
+        default: false 
+      },
+      paymentDate: { 
+        type: Date 
+      },
+      created_at: {
+        type: Date,
+        default: Date.now
+      },
+      updated_at: {
+        type: Date,
+        default: Date.now
+      },
+    },
+    water: { 
+      amount: { 
+        type: Number 
+      },
+      dueDate: { 
+        type: Date 
+      },
+      isPaid: { 
+        type: Boolean, 
+        default: false 
+      },
+      paymentDate: { 
+        type: Date 
+      },
+      created_at: {
+        type: Date,
+        default: Date.now
+      },
+      updated_at: {
+        type: Date,
+        default: Date.now
+      },
+    },
+    maintenance: { 
+      amount: { 
+        type: Number 
+      },
+      dueDate: { 
+        type: Date 
+      },
+      isPaid: { 
+        type: Boolean, 
+        default: false 
+      },
+      paymentDate: { 
+        type: Date 
+      },
+      created_at: {
+        type: Date,
+        default: Date.now
+      },
+      updated_at: {
+        type: Date,
+        default: Date.now
+      },
+    },
+    internet: { 
+      amount: { 
+        type: Number 
+      },
+      dueDate: { 
+        type: Date 
+      },
+      isPaid: { 
+        type: Boolean, 
+        default: false 
+      },
+      paymentDate: { 
+        type: Date 
+      },
+      created_at: {
+        type: Date,
+        default: Date.now
+      },
+      updated_at: {
+        type: Date,
+        default: Date.now
+      },
+    },
+  }],
+
+  // New field for room repair requests
+  roomRepairs: [{
+    repairType: { 
+      type: String, 
+      required: true 
+    }, // Type of repair requested
+    description: { 
+      type: String, 
+      required: true 
+    }, // Description of the repair
+    requestDate: { 
+      type: Date, 
+      default: Date.now 
+    }, // Date the repair was requested
+    status: { 
+      type: String, 
+      enum: ['pending', 'in-progress', 'completed'], 
+      default: 'pending' 
+    }, // Status of the repair
+    completionDate: { 
+      type: Date 
+    } // Date the repair was completed
+  }]
 });
-
 
 module.exports = db.model('Inquiry', inquirySchema);

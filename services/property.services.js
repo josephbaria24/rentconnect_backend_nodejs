@@ -36,6 +36,14 @@ class PropertyServices {
     
         return await createProperty.save();
     }
+    static async updateProperty(propertyId, updates) {
+        try {
+            const updatedProperty = await PropertyModel.findByIdAndUpdate(propertyId, updates, { new: true });
+            return updatedProperty;
+        } catch (error) {
+            throw error;
+        }
+    }
     
     static async getUserProperty(userId) {
         const getUserProperty = await PropertyModel.find({ userId });
@@ -72,14 +80,7 @@ class PropertyServices {
     }
     // Add the update method in PropertyServices
 
-    static async updateProperty(propertyId, updates) {
-        try {
-            const updatedProperty = await PropertyModel.findByIdAndUpdate(propertyId, updates, { new: true });
-            return updatedProperty;
-        } catch (error) {
-            throw error;
-        }
-    }
+   
 
     
 }

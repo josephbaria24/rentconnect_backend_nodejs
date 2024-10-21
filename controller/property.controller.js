@@ -53,7 +53,75 @@ exports.createProperty = async (req, res, next) => {
     }
 };
 
+exports.updateProperty = async (req, res, next) => {
+    try {
+        const { propertyId } = req.params;
 
+        // Extracting files
+        const photo = req.files['photo'] ? req.files['photo'][0].path : null;
+        const photo2 = req.files['photo2'] ? req.files['photo2'][0].path : null;
+        const photo3 = req.files['photo3'] ? req.files['photo3'][0].path : null;
+        const legalDocPhoto = req.files['legalDocPhoto'] ? req.files['legalDocPhoto'][0].path : null;
+        const legalDocPhoto2 = req.files['legalDocPhoto2'] ? req.files['legalDocPhoto2'][0].path : null;
+        const legalDocPhoto3 = req.files['legalDocPhoto3'] ? req.files['legalDocPhoto3'][0].path : null;
+
+        // Gather updates from the body
+        const updates = {
+            ...req.body, // Spread existing updates from the body
+            photo,
+            photo2,
+            photo3,
+            legalDocPhoto,
+            legalDocPhoto2,
+            legalDocPhoto3,
+        };
+
+        // Extract the location from the request body
+        const location = req.body.location; // Add this line to get the location from the request body
+
+        // Parse location if it exists
+        let parsedLocation;
+        if (typeof location === 'string') {
+            try {
+                parsedLocation = JSON.parse(location); // Parse the JSON string
+            } catch (error) {
+                return res.status(400).json({ error: 'Invalid location format. Must be a valid JSON string.' });
+            }
+        } else {
+            parsedLocation = location; // Use the parsed location directly if it is already an object
+        }
+
+        // Add parsed location to updates
+        updates.location = parsedLocation; // Add the parsed location to the updates object
+
+        const updatedProperty = await PropertyServices.updateProperty(propertyId, updates);
+
+        if (!updatedProperty) {
+            return res.status(404).json({ status: false, error: 'Property not found' });
+        }
+
+        res.json({ status: true, property: updatedProperty });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// exports.updateProperty = async (req, res, next) => {
+//     try {
+//         const { propertyId } = req.params;
+//         const updates = req.body;
+
+//         const updatedProperty = await PropertyServices.updateProperty(propertyId, updates);
+
+//         if (!updatedProperty) {
+//             return res.status(404).json({ status: false, error: 'Property not found' });
+//         }
+
+//         res.json({ status: true, property: updatedProperty });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 exports.getUserProperty = async (req, res, next) => {
     try {
         const { userId } = req.body;
@@ -123,19 +191,4 @@ exports.deleteProperty = async (req, res, next) => {
     }
 };
 
-exports.updateProperty = async (req, res, next) => {
-    try {
-        const { propertyId } = req.params;
-        const updates = req.body;
 
-        const updatedProperty = await PropertyServices.updateProperty(propertyId, updates);
-
-        if (!updatedProperty) {
-            return res.status(404).json({ status: false, error: 'Property not found' });
-        }
-
-        res.json({ status: true, property: updatedProperty });
-    } catch (error) {
-        next(error);
-    }
-};

@@ -27,6 +27,29 @@ router.patch('/reject/:inquiryId', inquiryController.rejectInquiry);
 router.get('/room/:roomId/property', inquiryController.getPropertyByRoomId);
 
 
+// Add a room bill to a specific inquiry
+router.post('/:inquiryId/add', inquiryController.addRoomBill);
+
+// Update a specific room bill
+router.patch('/:inquiryId/update/:billId', inquiryController.updateRoomBill);
+
+// Delete a specific room bill
+router.delete('/:inquiryId/delete/:billId', inquiryController.deleteRoomBill);
+
+// Add a room repair request to a specific inquiry
+router.post('/:inquiryId/add', inquiryController.addRoomRepair);
+
+// Update a specific room repair request
+router.patch('/:inquiryId/update/:repairId', inquiryController.updateRoomRepair);
+
+// Delete a specific room repair request
+router.delete('/:inquiryId/delete/:repairId', inquiryController.deleteRoomRepair);
+
+
+
+
+
+
 router.get('/:inquiryId/email', async (req, res) => {
     try {
         const inquiryId = req.params.inquiryId;

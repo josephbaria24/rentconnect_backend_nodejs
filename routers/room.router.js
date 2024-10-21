@@ -22,6 +22,36 @@ router.post('/reserve', RoomController.reserveRoom);
 router.post('/request-rent', RoomController.requestRent);
 
 
+
+router.put('/:id/due-date', async (req, res) => {
+  try {
+    let { dueDate } = req.body;
+    const roomId = req.params.id;
+
+    // Convert the incoming date string to a Date object
+    let date = new Date(dueDate);
+
+    // Set time to midnight (UTC) to avoid timezone shifts
+    date.setUTCHours(0, 0, 0, 0);
+
+    const updatedRoom = await Room.findByIdAndUpdate(
+      roomId,
+      { dueDate: date.toISOString() }, // Save date as UTC midnight
+      { new: true } // Return the updated room
+    );
+
+    if (!updatedRoom) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    res.status(200).json({ message: 'Due date updated successfully', updatedRoom });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating due date', error });
+  }
+});
+
+
+
 router.patch('/:roomId/occupy', async (req, res) => {
   const { roomId } = req.params;
   const { userId } = req.body;

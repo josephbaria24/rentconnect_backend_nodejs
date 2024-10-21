@@ -245,38 +245,6 @@ const deleteInquiry = async (req, res) => {
   }
 };
 
-// const markRoomAsOccupied = async (req, res) => {
-//   const { roomId } = req.params;
-//   const { userId } = req.body; // this should be the ID of the occupant
-
-//   try {
-//       // Find the inquiry that has the roomId and is in reservationInquirers
-//       const inquiry = await Inquiry.findOne({ roomId, status: 'approved' });
-      
-//       if (!inquiry || inquiry.requestType !== 'reservation') {
-//           return res.status(404).json({ error: 'No approved reservation found for this room.' });
-//       }
-
-//       // Update the inquiry to reflect that the occupant has moved in
-//       await Inquiry.findByIdAndUpdate(inquiry._id, { status: 'occupied' });
-
-//       // Update the room status and add the occupant to occupantUsers
-//       const updatedRoom = await Room.findByIdAndUpdate(roomId, {
-//           roomStatus: 'occupied',
-//           $addToSet: { occupantUsers: inquiry.userId } // Add the occupant userId
-//       }, { new: true });
-
-//       if (!updatedRoom) {
-//           return res.status(404).json({ error: 'Room not found.' });
-//       }
-
-//       res.status(200).json({ message: 'Room marked as occupied and user added to occupantUsers.', room: updatedRoom });
-//   } catch (error) {
-//       console.error('Error marking room as occupied:', error);
-//       res.status(500).json({ error: error.message });
-//   }
-// };
-
 const markRoomAsOccupied = async (req, res) => {
   const { roomId } = req.params;
 
@@ -428,6 +396,219 @@ const getPropertyByRoomId = async (req, res) => {
 
 
 
+const addRoomBill = async (req, res) => {
+  const { inquiryId } = req.params;
+  const { electricity, water, maintenance, internet } = req.body;
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    const billData = {
+      electricity: {
+        amount: electricity?.amount || null, // Allow null if not provided
+        dueDate: electricity?.dueDate || null,
+        isPaid: electricity?.isPaid || false, // Default to false if not provided
+        paymentDate: electricity?.paymentDate || null,
+      },
+      water: {
+        amount: water?.amount || null, // Allow null if not provided
+        dueDate: water?.dueDate || null,
+        isPaid: water?.isPaid || false,
+        paymentDate: water?.paymentDate || null,
+      },
+      maintenance: {
+        amount: maintenance?.amount || null, // Allow null if not provided
+        dueDate: maintenance?.dueDate || null,
+        isPaid: maintenance?.isPaid || false,
+        paymentDate: maintenance?.paymentDate || null,
+      },
+      internet: {
+        amount: internet?.amount || null, // Allow null if not provided
+        dueDate: internet?.dueDate || null,
+        isPaid: internet?.isPaid || false,
+        paymentDate: internet?.paymentDate || null,
+      },
+    };
+
+    inquiry.roomBills.push(billData);
+    await inquiry.save();
+
+    res.status(201).json({ message: 'Room bill added successfully', inquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+const updateRoomBill = async (req, res) => {
+  const { inquiryId, billId } = req.params;
+  const { electricity, water, maintenance, internet } = req.body; // Assuming these are provided as objects with the necessary fields
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    const bill = inquiry.roomBills.id(billId);
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found' });
+    }
+
+    // Update electricity bill
+    if (electricity) {
+      if (electricity.amount !== undefined) bill.electricity.amount = electricity.amount;
+      if (electricity.dueDate) bill.electricity.dueDate = electricity.dueDate;
+      if (electricity.isPaid !== undefined) bill.electricity.isPaid = electricity.isPaid;
+      if (electricity.paymentDate) bill.electricity.paymentDate = electricity.paymentDate;
+      bill.electricity.updated_at = Date.now(); // Update timestamp
+    }
+
+    // Update water bill
+    if (water) {
+      if (water.amount !== undefined) bill.water.amount = water.amount;
+      if (water.dueDate) bill.water.dueDate = water.dueDate;
+      if (water.isPaid !== undefined) bill.water.isPaid = water.isPaid;
+      if (water.paymentDate) bill.water.paymentDate = water.paymentDate;
+      bill.water.updated_at = Date.now(); // Update timestamp
+    }
+
+    // Update maintenance bill
+    if (maintenance) {
+      if (maintenance.amount !== undefined) bill.maintenance.amount = maintenance.amount;
+      if (maintenance.dueDate) bill.maintenance.dueDate = maintenance.dueDate;
+      if (maintenance.isPaid !== undefined) bill.maintenance.isPaid = maintenance.isPaid;
+      if (maintenance.paymentDate) bill.maintenance.paymentDate = maintenance.paymentDate;
+      bill.maintenance.updated_at = Date.now(); // Update timestamp
+    }
+
+    // Update internet bill
+    if (internet) {
+      if (internet.amount !== undefined) bill.internet.amount = internet.amount;
+      if (internet.dueDate) bill.internet.dueDate = internet.dueDate;
+      if (internet.isPaid !== undefined) bill.internet.isPaid = internet.isPaid;
+      if (internet.paymentDate) bill.internet.paymentDate = internet.paymentDate;
+      bill.internet.updated_at = Date.now(); // Update timestamp
+    }
+
+    await inquiry.save();
+
+    res.status(200).json({ message: 'Room bill updated successfully', inquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+const deleteRoomBill = async (req, res) => {
+  const { inquiryId, billId } = req.params;
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    const bill = inquiry.roomBills.id(billId);
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found' });
+    }
+
+    bill.remove();
+    await inquiry.save();
+
+    res.status(200).json({ message: 'Room bill deleted successfully', inquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const addRoomRepair = async (req, res) => {
+  const { inquiryId } = req.params;
+  const { repairType, description } = req.body;
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    const repairData = {
+      repairType,
+      description
+    };
+
+    inquiry.roomRepairs.push(repairData);
+    await inquiry.save();
+
+    res.status(201).json({ message: 'Room repair request added successfully', inquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const updateRoomRepair = async (req, res) => {
+  const { inquiryId, repairId } = req.params;
+  const { repairType, description, status, completionDate } = req.body;
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    const repair = inquiry.roomRepairs.id(repairId);
+    if (!repair) {
+      return res.status(404).json({ message: 'Repair request not found' });
+    }
+
+    if (repairType) repair.repairType = repairType;
+    if (description) repair.description = description;
+    if (status) repair.status = status;
+    if (completionDate) repair.completionDate = completionDate;
+
+    await inquiry.save();
+
+    res.status(200).json({ message: 'Room repair request updated successfully', inquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const deleteRoomRepair = async (req, res) => {
+  const { inquiryId, repairId } = req.params;
+
+  try {
+    const inquiry = await Inquiry.findById(inquiryId);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    const repair = inquiry.roomRepairs.id(repairId);
+    if (!repair) {
+      return res.status(404).json({ message: 'Repair request not found' });
+    }
+
+    repair.remove();
+    await inquiry.save();
+
+    res.status(200).json({ message: 'Room repair request deleted successfully', inquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 module.exports = {
   deleteInquiry,
   checkPendingInquiry,
@@ -442,6 +623,12 @@ module.exports = {
   getInquiries,
   rejectInquiry,
   getInquiriesByUserEmail,
-  getPropertyByRoomId
+  getPropertyByRoomId,
+  addRoomBill,
+  updateRoomBill,
+  deleteRoomBill,
+  addRoomRepair,
+  updateRoomRepair,
+  deleteRoomRepair
 
 };

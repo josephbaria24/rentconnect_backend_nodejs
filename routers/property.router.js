@@ -10,5 +10,5 @@ router.get('/getAllProperties', PropertyController.getAllProperties); // New rou
 router.post('/getPropertiesByIds', PropertyController.getPropertiesByIds);
 router.get('/getUserBookmarks/:userId', PropertyController.getBookmarkedProperties);
 router.delete('/deleteProperty/:id', PropertyController.deleteProperty);
-router.put('/properties/:propertyId', PropertyController.updateProperty);
+router.put('/properties/:propertyId', PropertyController.uploadPhotos, PropertyController.updateProperty);
 module.exports = router;

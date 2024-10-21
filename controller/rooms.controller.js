@@ -21,8 +21,7 @@ exports.createRoom = async (req, res, next) => {
                 deposit: room.deposit,
                 advance: room.advance,
                 roomStatus: room.roomStatus,
-                dueDate: room.dueDate,
-                //reservationDuration: room.reservationDuration,
+                dueDate: room.dueDate ? new Date(room.dueDate) : null,
                 reservationFee: room.reservationFee,
             };
 
@@ -94,6 +93,9 @@ exports.updateRoom = async (req, res, next) => {
         const updatedRoom = await RoomServices.updateRoom(id, updateData);
         if (!updatedRoom) {
             return res.status(404).json({ status: false, error: 'Room not found' });
+        }
+        if (updateData.dueDate) {
+            updateData.dueDate = new Date(updateData.dueDate);
         }
         res.json({ status: true, room: updatedRoom });
     } catch (error) {

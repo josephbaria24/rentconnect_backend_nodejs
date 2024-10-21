@@ -76,6 +76,7 @@ const otpRouter = require('./routers/otp.routes');
 const http = require('http');
 const socketIo = require('socket.io');
 const rentalAgreementRoutes = require('./routers/rentalAgreement.router')
+const scheduler = require('./utils/sheduler');
 
 const app = express();
 const server = http.createServer(app);

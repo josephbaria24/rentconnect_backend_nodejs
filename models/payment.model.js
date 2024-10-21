@@ -36,6 +36,11 @@ const paymentSchema = new Schema({
             enum: ['pending', 'completed', 'rejected'],
             default: 'pending' // Default payment status is pending until confirmed
         },
+        paymentMethod: {
+            type: String, // Payment method chosen by the occupant (e.g., "Bank Transfer", "Cash")
+            enum: ['bank transfer', 'cash', 'online payment', 'others'],
+            required: false // Require the selection of a payment method
+        },
         proofOfPayment: {
             type: String, // URL or path to the proof of payment (receipt photo)
             required: false
