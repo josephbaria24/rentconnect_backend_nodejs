@@ -398,7 +398,7 @@ const getPropertyByRoomId = async (req, res) => {
 
 const addRoomBill = async (req, res) => {
   const { inquiryId } = req.params;
-  const { electricity, water, maintenance, internet } = req.body;
+  const { electricity, water, maintenance, internet, dueDate } = req.body; // Add dueDate to the body
 
   try {
     const inquiry = await Inquiry.findById(inquiryId);
@@ -408,27 +408,24 @@ const addRoomBill = async (req, res) => {
     }
 
     const billData = {
+      dueDate: dueDate || null, // Shared dueDate for all bill types
       electricity: {
         amount: electricity?.amount || null, // Allow null if not provided
-        dueDate: electricity?.dueDate || null,
         isPaid: electricity?.isPaid || false, // Default to false if not provided
         paymentDate: electricity?.paymentDate || null,
       },
       water: {
         amount: water?.amount || null, // Allow null if not provided
-        dueDate: water?.dueDate || null,
         isPaid: water?.isPaid || false,
         paymentDate: water?.paymentDate || null,
       },
       maintenance: {
         amount: maintenance?.amount || null, // Allow null if not provided
-        dueDate: maintenance?.dueDate || null,
         isPaid: maintenance?.isPaid || false,
         paymentDate: maintenance?.paymentDate || null,
       },
       internet: {
         amount: internet?.amount || null, // Allow null if not provided
-        dueDate: internet?.dueDate || null,
         isPaid: internet?.isPaid || false,
         paymentDate: internet?.paymentDate || null,
       },
@@ -442,8 +439,6 @@ const addRoomBill = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
 
 const updateRoomBill = async (req, res) => {
   const { inquiryId, billId } = req.params;
