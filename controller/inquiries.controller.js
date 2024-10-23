@@ -396,6 +396,52 @@ const getPropertyByRoomId = async (req, res) => {
 
 
 
+// const addRoomBill = async (req, res) => {
+//   const { inquiryId } = req.params;
+//   const { electricity, water, maintenance, internet, dueDate } = req.body; // Add dueDate to the body
+
+//   try {
+//     const inquiry = await Inquiry.findById(inquiryId);
+    
+//     if (!inquiry) {
+//       return res.status(404).json({ message: 'Inquiry not found' });
+//     }
+
+//     const billData = {
+//       dueDate: dueDate || null, // Shared dueDate for all bill types
+//       electricity: {
+//         amount: electricity?.amount || null, // Allow null if not provided
+//         isPaid: electricity?.isPaid || false, // Default to false if not provided
+//         paymentDate: electricity?.paymentDate || null,
+//       },
+//       water: {
+//         amount: water?.amount || null, // Allow null if not provided
+//         isPaid: water?.isPaid || false,
+//         paymentDate: water?.paymentDate || null,
+//       },
+//       maintenance: {
+//         amount: maintenance?.amount || null, // Allow null if not provided
+//         isPaid: maintenance?.isPaid || false,
+//         paymentDate: maintenance?.paymentDate || null,
+//       },
+//       internet: {
+//         amount: internet?.amount || null, // Allow null if not provided
+//         isPaid: internet?.isPaid || false,
+//         paymentDate: internet?.paymentDate || null,
+//       },
+//     };
+
+//     inquiry.roomBills.push(billData);
+//     await inquiry.save();
+
+//     res.status(201).json({ message: 'Room bill added successfully', inquiry });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+
 const addRoomBill = async (req, res) => {
   const { inquiryId } = req.params;
   const { electricity, water, maintenance, internet, dueDate } = req.body; // Add dueDate to the body
@@ -407,30 +453,65 @@ const addRoomBill = async (req, res) => {
       return res.status(404).json({ message: 'Inquiry not found' });
     }
 
+    // Parse dueDate to remove hours for comparison
+    const normalizedDueDate = new Date(dueDate);
+    normalizedDueDate.setHours(0, 0, 0, 0); // Remove hours for accurate monthly check
+
+    // Check if a bill for the same month and year already exists
+    const existingBill = inquiry.roomBills.find(bill => {
+      const billDueDate = new Date(bill.dueDate);
+      billDueDate.setHours(0, 0, 0, 0); // Normalize bill dueDate for comparison
+
+      return (
+        billDueDate.getFullYear() === normalizedDueDate.getFullYear() &&
+        billDueDate.getMonth() === normalizedDueDate.getMonth()
+      );
+    });
+
+    if (existingBill) {
+      // If the bill for the same month exists, prompt the user to view it instead
+      return res.status(409).json({
+        message: 'A bill for this month already exists. Do you want to view it?',
+        billId: existingBill._id
+      });
+    }
+
+    // Create a new bill
     const billData = {
-      dueDate: dueDate || null, // Shared dueDate for all bill types
+      dueDate: dueDate || null,
+      created_at: Date.now(),
+      updated_at: Date.now(), // Shared dueDate for all bill types
       electricity: {
         amount: electricity?.amount || null, // Allow null if not provided
         isPaid: electricity?.isPaid || false, // Default to false if not provided
         paymentDate: electricity?.paymentDate || null,
+        created_at: Date.now(),
+        updated_at: Date.now(),
       },
       water: {
         amount: water?.amount || null, // Allow null if not provided
         isPaid: water?.isPaid || false,
         paymentDate: water?.paymentDate || null,
+        created_at: Date.now(),
+        updated_at: Date.now(),
       },
       maintenance: {
         amount: maintenance?.amount || null, // Allow null if not provided
         isPaid: maintenance?.isPaid || false,
         paymentDate: maintenance?.paymentDate || null,
+        created_at: Date.now(),
+        updated_at: Date.now(),
       },
       internet: {
         amount: internet?.amount || null, // Allow null if not provided
         isPaid: internet?.isPaid || false,
         paymentDate: internet?.paymentDate || null,
+        created_at: Date.now(),
+        updated_at: Date.now(),
       },
     };
 
+    // Add new bill to roomBills
     inquiry.roomBills.push(billData);
     await inquiry.save();
 
@@ -439,6 +520,9 @@ const addRoomBill = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
 
 const updateRoomBill = async (req, res) => {
   const { inquiryId, billId } = req.params;
@@ -501,29 +585,35 @@ const updateRoomBill = async (req, res) => {
 };
 
 
+
+
+
+
+
 const deleteRoomBill = async (req, res) => {
-  const { inquiryId, billId } = req.params;
+  const { billId } = req.params;
 
   try {
-    const inquiry = await Inquiry.findById(inquiryId);
-    
-    if (!inquiry) {
-      return res.status(404).json({ message: 'Inquiry not found' });
+    // Use MongoDB updateOne to pull the bill from the roomBills array
+    const result = await Inquiry.updateOne(
+      { 'roomBills._id': billId }, // Query to find the inquiry containing the bill
+      { $pull: { roomBills: { _id: billId } } } // Pull the specific bill from the array
+    );
+
+    // Check if a document was modified
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: 'Bill not found or no changes made' });
     }
 
-    const bill = inquiry.roomBills.id(billId);
-    if (!bill) {
-      return res.status(404).json({ message: 'Bill not found' });
-    }
-
-    bill.remove();
-    await inquiry.save();
-
-    res.status(200).json({ message: 'Room bill deleted successfully', inquiry });
+    res.status(200).json({ message: 'Room bill deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+
 
 const addRoomRepair = async (req, res) => {
   const { inquiryId } = req.params;

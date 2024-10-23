@@ -1,3 +1,5 @@
+//inquiry.model.js
+
 const db = require('../config/db');
 const mongoose = require('mongoose');
 
@@ -68,6 +70,14 @@ const inquirySchema = new mongoose.Schema({
     dueDate: { 
       type: Date 
     }, // Shared dueDate for all utilities
+    created_at: {
+      type: Date,
+      default: Date.now
+    },
+    updated_at: {
+      type: Date,
+      default: Date.now
+    },
     electricity: { 
       amount: { 
         type: Number 
