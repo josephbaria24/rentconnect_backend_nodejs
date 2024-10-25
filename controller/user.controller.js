@@ -4,19 +4,10 @@ const NotificationService = require('../services/notification.services');
 const upload = require('../multerConfig');
 const path = require('path');
 
-// exports.register = async(req,res,next)=>{
-//     try{
-//         const { email, password } = req.body;
-//         const successRes = await UserService.registerUser(email, password);
-//         res.json({status:true, success:"User Registered Successfully"});
-//     } catch(error) {
-//         res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
-//     }
-// }
 
 exports.login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, player_id  } = req.body;
 
         const user = await UserService.checkuser(email);
 
@@ -38,6 +29,7 @@ exports.login = async (req, res, next) => {
         }
 
         user.last_login = new Date();
+        if (player_id) user.player_id = player_id;
         await user.save();
 
         let tokenData = { _id: user._id, email: user.email };
@@ -49,34 +41,6 @@ exports.login = async (req, res, next) => {
         res.status(500).json({ status: false, error: 'Login failed. Please try again.' });
     }
 }
-
-// exports.login = async(req,res,next)=>{
-//     try{
-//         const { email, password } = req.body;
-
-//         const user = await UserService.checkuser(email);
-
-//         if(!user){
-//             return res.status(404).json({ status: false, error: 'User does not exist.' });
-//         }
-
-//         const isMatch = await user.comparePassword(password);
-//         if(!isMatch) {
-//             return res.status(400).json({ status: false, error: 'Invalid password. Please try again.' });
-//         }
-
-//         user.last_login = new Date();
-//         await user.save();
-
-//         let tokenData = {_id:user._id,email:user.email};
-//         const token = await UserService.generateToken(tokenData,"secretKey",'2d');
-//         res.status(200).json({status:true, token:token})
-
-//     } catch(error) {
-//         console.error('Error in login:', error);
-//         res.status(500).json({ status: false, error: 'Login failed. Please try again.' });
-//     }
-// }
 
 exports.getUserEmailById = async (req, res, next) => {
     try {
@@ -266,8 +230,6 @@ exports.updateUserInfo = async (req, res, next) => {
 exports.createRentalRequest = async (req, res) => {
     try {
         const { roomId, userId } = req.body;
-        // Logic to create a rental request
-        // Notify the landlord
         const landlordId = await getLandlordIdByRoomId(roomId); // Fetch landlord ID based on room
         const message = `New rental request for room ${roomId} from user ${userId}`;
         await NotificationService.createNotification(landlordId, 'request', message);

@@ -66,10 +66,14 @@ const inquirySchema = new mongoose.Schema({
     type: Date, 
   },
 
-   roomBills: [{
+  roomBills: [{
     dueDate: { 
       type: Date 
-    }, // Shared dueDate for all utilities
+    }, 
+    isPaid: { 
+      type: Boolean, 
+      default: false 
+    }, // Shared isPaid status for all utilities in this roomBill entry
     created_at: {
       type: Date,
       default: Date.now
@@ -81,10 +85,6 @@ const inquirySchema = new mongoose.Schema({
     electricity: { 
       amount: { 
         type: Number 
-      },
-      isPaid: { 
-        type: Boolean, 
-        default: false 
       },
       paymentDate: { 
         type: Date 
@@ -102,10 +102,6 @@ const inquirySchema = new mongoose.Schema({
       amount: { 
         type: Number 
       },
-      isPaid: { 
-        type: Boolean, 
-        default: false 
-      },
       paymentDate: { 
         type: Date 
       },
@@ -121,10 +117,6 @@ const inquirySchema = new mongoose.Schema({
     maintenance: { 
       amount: { 
         type: Number 
-      },
-      isPaid: { 
-        type: Boolean, 
-        default: false 
       },
       paymentDate: { 
         type: Date 
@@ -142,10 +134,6 @@ const inquirySchema = new mongoose.Schema({
       amount: { 
         type: Number 
       },
-      isPaid: { 
-        type: Boolean, 
-        default: false 
-      },
       paymentDate: { 
         type: Date 
       },
@@ -159,6 +147,7 @@ const inquirySchema = new mongoose.Schema({
       },
     },
   }],
+  
 
 
   // New field for room repair requests

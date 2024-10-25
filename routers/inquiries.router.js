@@ -46,6 +46,8 @@ router.patch('/:inquiryId/update/:repairId', inquiryController.updateRoomRepair)
 router.delete('/:inquiryId/delete/:repairId', inquiryController.deleteRoomRepair);
 
 
+router.patch('/bills/:billId/isPaid', inquiryController.updateRoomBillIsPaid);
+
 
 
 // Endpoint to get bills for the current month

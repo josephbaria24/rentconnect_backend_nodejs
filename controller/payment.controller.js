@@ -1,6 +1,7 @@
 const PaymentServices = require('../services/payment.services');
 const PaymentModel = require('../models/payment.model')
 const mongoose = require('mongoose');
+const emailer = require("../services/emailer.services")
 
 exports.createMonthlyPayment = async (req, res) => {
     try {
@@ -105,6 +106,7 @@ exports.updatePaymentStatus = async (req, res) => {
 };
 
 
+
 exports.createOrAddMonthlyPayment = async (req, res) => {
     const { occupantId, landlordId, roomId, monthlyPayments } = req.body;
     const proofsOfPayment = req.files.map(file => file.path); // Process the proof of payment files
@@ -128,6 +130,27 @@ exports.createOrAddMonthlyPayment = async (req, res) => {
             existingPayment.monthlyPayments.push(newMonthlyPayment);
             await existingPayment.save();
 
+            // Send email notifications
+            const occupantEmail = req.body.occupantEmail; // Get occupant's email from the request body
+            const landlordEmail = req.body.landlordEmail; // Get landlord's email from the request body
+            const message = `A new monthly payment has been added for the room ID: ${roomId}.`;
+
+            await emailer.sendOccupantNotificationEmail(occupantEmail, message, (error, info) => {
+                if (error) {
+                    console.error("Error sending occupant notification email:", error);
+                } else {
+                    console.log("Occupant notification email sent:", info);
+                }
+            });
+
+            await emailer.sendNotificationEmail(landlordEmail, message, (error, info) => {
+                if (error) {
+                    console.error("Error sending landlord notification email:", error);
+                } else {
+                    console.log("Landlord notification email sent:", info);
+                }
+            });
+
             return res.status(200).json({
                 message: "Monthly payment added successfully",
                 payment: existingPayment
@@ -150,6 +173,27 @@ exports.createOrAddMonthlyPayment = async (req, res) => {
             const newPayment = new PaymentModel(paymentData);
             await newPayment.save();
 
+            // Send email notifications
+            const occupantEmail = req.body.occupantEmail; // Get occupant's email from the request body
+            const landlordEmail = req.body.landlordEmail; // Get landlord's email from the request body
+            const message = `A new monthly payment has been created for the room ID: ${roomId}.`;
+
+            await emailer.sendOccupantNotificationEmail(occupantEmail, message, (error, info) => {
+                if (error) {
+                    console.error("Error sending occupant notification email:", error);
+                } else {
+                    console.log("Occupant notification email sent:", info);
+                }
+            });
+
+            await emailer.sendNotificationEmail(landlordEmail, message, (error, info) => {
+                if (error) {
+                    console.error("Error sending landlord notification email:", error);
+                } else {
+                    console.log("Landlord notification email sent:", info);
+                }
+            });
+
             res.status(201).json({ message: "Monthly payment created successfully", payment: newPayment });
         }
     } catch (error) {
@@ -157,6 +201,60 @@ exports.createOrAddMonthlyPayment = async (req, res) => {
         res.status(500).json({ message: 'Error creating or adding payment', error: error.message });
     }
 };
+
+
+// exports.createOrAddMonthlyPayment = async (req, res) => {
+//     const { occupantId, landlordId, roomId, monthlyPayments } = req.body;
+//     const proofsOfPayment = req.files.map(file => file.path); // Process the proof of payment files
+
+//     try {
+//         // First, check if the payment already exists for the occupant and room
+//         let existingPayment = await PaymentModel.findOne({ occupantId, roomId });
+
+//         if (existingPayment) {
+//             // If a payment record exists, call `addMonthlyPayment` instead of creating a new one
+//             const newMonthlyPayment = {
+//                 month: monthlyPayments[0].month, // Assuming you're passing the month
+//                 amount: monthlyPayments[0].amount, // Assuming amount is in the array
+//                 proofOfPayment: proofsOfPayment[0] || null,
+//                 status: 'pending',
+//                 created_at: new Date(),
+//                 updated_at: new Date()
+//             };
+
+//             // Push the new payment into the existing document
+//             existingPayment.monthlyPayments.push(newMonthlyPayment);
+//             await existingPayment.save();
+
+//             return res.status(200).json({
+//                 message: "Monthly payment added successfully",
+//                 payment: existingPayment
+//             });
+
+//         } else {
+//             // If no payment exists, create a new payment with initial monthly payment
+//             const paymentData = {
+//                 occupantId,
+//                 landlordId,
+//                 roomId,
+//                 proofOfReservation: req.body.proofOfReservation || null,
+//                 monthlyPayments: monthlyPayments.map((payment, index) => ({
+//                     ...payment,
+//                     status: 'pending', // Default status
+//                     proofOfPayment: proofsOfPayment[index] || null
+//                 }))
+//             };
+
+//             const newPayment = new PaymentModel(paymentData);
+//             await newPayment.save();
+
+//             res.status(201).json({ message: "Monthly payment created successfully", payment: newPayment });
+//         }
+//     } catch (error) {
+//         console.error('Error creating or adding payment:', error);
+//         res.status(500).json({ message: 'Error creating or adding payment', error: error.message });
+//     }
+// };
 
 
 exports.addMonthlyPayment = async (req, res) => {
@@ -245,35 +343,43 @@ exports.updateProofOfPayment = async (req, res) => {
 
 
 
+
+
+// Existing uploadProofOfReservation function
 exports.uploadProofOfReservation = async (req, res) => {
     try {
-        const { occupantId, roomId, landlordId } = req.body; // Extract landlordId here
+        const { occupantId, roomId, landlordId, landlordEmail, occupantName } = req.body; // Extract landlordId here
 
-        if (!occupantId || !roomId || !landlordId) {
-            return res.status(400).json({ status: false, message: "Occupant ID, Room ID, and Landlord ID are required." });
+        if (!occupantId || !roomId || !landlordId || !landlordEmail) {
+            return res.status(400).json({ status: false, message: "Occupant ID, Room ID, Landlord ID, and Landlord Email are required." });
         }
 
-        // Check if proofOfReservation file exists
         if (!req.file) {
             return res.status(400).json({ status: false, message: "Proof of reservation payment is required." });
         }
 
-        // Try to find the payment record
         let payment = await PaymentModel.findOne({ occupantId, roomId });
 
-        // If no payment record exists, create one
         if (!payment) {
             payment = new PaymentModel({
                 occupantId,
-                landlordId, // Use landlordId from request body
+                landlordId,
                 roomId,
-                monthlyPayments: [] // Initialize with an empty array if needed
+                monthlyPayments: []
             });
         }
 
-        // Update the payment document with the proof of reservation
-        payment.proofOfReservation = req.file.path; // Save the file path or URL
+        payment.proofOfReservation = req.file.path;
         await payment.save();
+
+        // Send notification to landlord
+        await emailer.sendProofUploadNotificationEmail(landlordEmail, occupantName, roomId, "reservation", (error, response) => {
+            if (error) {
+                console.error("Error sending email:", error);
+            } else {
+                console.log("Email sent:", response);
+            }
+        });
 
         return res.status(200).json({ status: true, message: "Proof of reservation uploaded successfully." });
 
@@ -284,6 +390,45 @@ exports.uploadProofOfReservation = async (req, res) => {
         }
     }
 };
+// exports.uploadProofOfReservation = async (req, res) => {
+//     try {
+//         const { occupantId, roomId, landlordId } = req.body; // Extract landlordId here
+
+//         if (!occupantId || !roomId || !landlordId) {
+//             return res.status(400).json({ status: false, message: "Occupant ID, Room ID, and Landlord ID are required." });
+//         }
+
+//         // Check if proofOfReservation file exists
+//         if (!req.file) {
+//             return res.status(400).json({ status: false, message: "Proof of reservation payment is required." });
+//         }
+
+//         // Try to find the payment record
+//         let payment = await PaymentModel.findOne({ occupantId, roomId });
+
+//         // If no payment record exists, create one
+//         if (!payment) {
+//             payment = new PaymentModel({
+//                 occupantId,
+//                 landlordId, // Use landlordId from request body
+//                 roomId,
+//                 monthlyPayments: [] // Initialize with an empty array if needed
+//             });
+//         }
+
+//         // Update the payment document with the proof of reservation
+//         payment.proofOfReservation = req.file.path; // Save the file path or URL
+//         await payment.save();
+
+//         return res.status(200).json({ status: true, message: "Proof of reservation uploaded successfully." });
+
+//     } catch (error) {
+//         console.error("Error uploading proof of reservation:", error);
+//         if (!res.headersSent) {
+//             return res.status(500).json({ status: false, message: error.message });
+//         }
+//     }
+// };
 
  exports.getProofOfReservationByRoomId = async (req, res) => {
     const { roomId } = req.params;

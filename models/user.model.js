@@ -67,6 +67,10 @@ const userSchema = new Schema({
         type: Date,
         required: false, // Not required for all users
     },
+    player_id: {
+        type: String,
+        required: false, // not all users might have it initially
+    }
 });
 
 

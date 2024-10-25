@@ -10,14 +10,7 @@ const otpService = require('../services/otp.services');
 
 
 class UserService{
-    // static async registerUser(email, password){
-    //     try{
-    //         const createUser = new UserModel({email, password});
-    //         return await createUser.save();
-    //     }catch(err){
-    //         throw err;
-    //     }
-    // }
+
     static async registerUser(email, password) {
         try {
             // Check if the email already exists

@@ -32,41 +32,6 @@ router.delete('/room/:roomId/payment/:month/proof/:type', PaymentController.dele
 router.post('/payments/updateStatus', PaymentController.updatePaymentStatus);
 
 
-// router.put('/:paymentId/monthlyPayments/:monthPaymentId/status', async (req, res) => {
-//     const { paymentId, monthPaymentId } = req.params;
-//     const { status } = req.body; // Expect status in the request body
-
-//     if (!['pending', 'completed', 'rejected'].includes(status)) {
-//         return res.status(400).json({ message: 'Invalid status value' });
-//     }
-
-//     try {
-//         // Find the payment by paymentId and then update the status of the specific monthly payment
-//         const updatedPayment = await PaymentModel.findOneAndUpdate(
-//             { 
-//                 _id: paymentId, 
-//                 'monthlyPayments._id': monthPaymentId 
-//             },
-//             { 
-//                 $set: { 
-//                     'monthlyPayments.$.status': status,
-//                     'monthlyPayments.$.updated_at': Date.now()
-//                 } 
-//             },
-//             { new: true }
-//         );
-
-//         if (!updatedPayment) {
-//             return res.status(404).json({ message: 'Payment or Monthly Payment not found' });
-//         }
-
-//         res.status(200).json(updatedPayment);
-//     } catch (error) {
-//         console.error('Error updating monthly payment status:', error);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// });
-
 
 router.put('/monthlyPayments/:monthPaymentId/status', async (req, res) => {
     const { monthPaymentId } = req.params;
