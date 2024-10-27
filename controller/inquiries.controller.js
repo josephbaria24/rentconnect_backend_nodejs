@@ -137,6 +137,11 @@ const updateInquiryAndApprove = async (req, res) => {
       updateData.reservationDuration = reservationDuration;
     }
 
+    // Set isRented to true if the request type is 'rent' and status is approved
+    if (requestType === 'rent' && status === 'approved') {
+      updateData.isRented = true;
+    }
+
     const updatedInquiry = await Inquiry.findByIdAndUpdate(
       inquiryId,
       updateData,
@@ -167,10 +172,10 @@ const updateInquiryAndApprove = async (req, res) => {
 
     res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
   } catch (error) {
+    console.error("Error updating inquiry and room:", error);
     res.status(500).send('Server error');
   }
 };
-
 
 
 const getInquiriesByPropertyId = async (req, res) => {

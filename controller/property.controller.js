@@ -106,22 +106,6 @@ exports.updateProperty = async (req, res, next) => {
     }
 };
 
-// exports.updateProperty = async (req, res, next) => {
-//     try {
-//         const { propertyId } = req.params;
-//         const updates = req.body;
-
-//         const updatedProperty = await PropertyServices.updateProperty(propertyId, updates);
-
-//         if (!updatedProperty) {
-//             return res.status(404).json({ status: false, error: 'Property not found' });
-//         }
-
-//         res.json({ status: true, property: updatedProperty });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
 exports.getUserProperty = async (req, res, next) => {
     try {
         const { userId } = req.body;
@@ -146,8 +130,10 @@ exports.getAllProperties = async (req, res, next) => {
 
 exports.getPropertiesByIds = async (req, res, next) => {
     try {
-        const { ids } = req.body;
-        const properties = await PropertyServices.getPropertiesByIds(ids);
+        const { ids } = req.query; // Access 'ids' from query parameters
+        const propertyIds = ids.split(','); // Convert comma-separated IDs to an array
+
+        const properties = await PropertyServices.getPropertiesByIds(propertyIds);
 
         if (!properties.length) {
             return res.status(404).json({ status: false, error: 'No properties found' });

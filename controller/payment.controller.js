@@ -116,46 +116,90 @@ exports.createOrAddMonthlyPayment = async (req, res) => {
         let existingPayment = await PaymentModel.findOne({ occupantId, roomId });
 
         if (existingPayment) {
-            // If a payment record exists, call `addMonthlyPayment` instead of creating a new one
-            const newMonthlyPayment = {
-                month: monthlyPayments[0].month, // Assuming you're passing the month
-                amount: monthlyPayments[0].amount, // Assuming amount is in the array
-                proofOfPayment: proofsOfPayment[0] || null,
-                status: 'pending',
-                created_at: new Date(),
-                updated_at: new Date()
-            };
+            // Check if a payment for the specific month already exists
+            const existingMonth = monthlyPayments[0].month; // Assuming you're passing the month in the first element
+            const existingMonthlyPaymentIndex = existingPayment.monthlyPayments.findIndex(
+                payment => payment.month === existingMonth
+            );
 
-            // Push the new payment into the existing document
-            existingPayment.monthlyPayments.push(newMonthlyPayment);
-            await existingPayment.save();
+            if (existingMonthlyPaymentIndex > -1) {
+                // If a payment for the month exists, overwrite it
+                existingPayment.monthlyPayments[existingMonthlyPaymentIndex] = {
+                    month: existingMonth,
+                    amount: monthlyPayments[0].amount, // Update amount
+                    proofOfPayment: proofsOfPayment[0] || null, // Update proof of payment
+                    status: 'pending',
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
 
-            // Send email notifications
-            const occupantEmail = req.body.occupantEmail; // Get occupant's email from the request body
-            const landlordEmail = req.body.landlordEmail; // Get landlord's email from the request body
-            const message = `A new monthly payment has been added for the room ID: ${roomId}.`;
+                await existingPayment.save();
 
-            await emailer.sendOccupantNotificationEmail(occupantEmail, message, (error, info) => {
-                if (error) {
-                    console.error("Error sending occupant notification email:", error);
-                } else {
-                    console.log("Occupant notification email sent:", info);
-                }
-            });
+                // Send email notifications
+                const occupantEmail = req.body.occupantEmail; // Get occupant's email from the request body
+                const landlordEmail = req.body.landlordEmail; // Get landlord's email from the request body
+                const message = `Your payment for the room ID: ${roomId} has been updated.`;
 
-            await emailer.sendNotificationEmail(landlordEmail, message, (error, info) => {
-                if (error) {
-                    console.error("Error sending landlord notification email:", error);
-                } else {
-                    console.log("Landlord notification email sent:", info);
-                }
-            });
+                await emailer.sendOccupantNotificationEmail(occupantEmail, message, (error, info) => {
+                    if (error) {
+                        console.error("Error sending occupant notification email:", error);
+                    } else {
+                        console.log("Occupant notification email sent:", info);
+                    }
+                });
 
-            return res.status(200).json({
-                message: "Monthly payment added successfully",
-                payment: existingPayment
-            });
+                await emailer.sendNotificationEmail(landlordEmail, message, (error, info) => {
+                    if (error) {
+                        console.error("Error sending landlord notification email:", error);
+                    } else {
+                        console.log("Landlord notification email sent:", info);
+                    }
+                });
 
+                return res.status(200).json({
+                    message: "Monthly payment updated successfully",
+                    payment: existingPayment
+                });
+            } else {
+                // If no payment exists for that month, add it to the existing payments
+                const newMonthlyPayment = {
+                    month: monthlyPayments[0].month,
+                    amount: monthlyPayments[0].amount,
+                    proofOfPayment: proofsOfPayment[0] || null,
+                    status: 'pending',
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                existingPayment.monthlyPayments.push(newMonthlyPayment);
+                await existingPayment.save();
+
+                // Send email notifications
+                const occupantEmail = req.body.occupantEmail; // Get occupant's email from the request body
+                const landlordEmail = req.body.landlordEmail; // Get landlord's email from the request body
+                const message = `A new monthly payment has been added for the room ID: ${roomId}.`;
+
+                await emailer.sendOccupantNotificationEmail(occupantEmail, message, (error, info) => {
+                    if (error) {
+                        console.error("Error sending occupant notification email:", error);
+                    } else {
+                        console.log("Occupant notification email sent:", info);
+                    }
+                });
+
+                await emailer.sendNotificationEmail(landlordEmail, message, (error, info) => {
+                    if (error) {
+                        console.error("Error sending landlord notification email:", error);
+                    } else {
+                        console.log("Landlord notification email sent:", info);
+                    }
+                });
+
+                return res.status(200).json({
+                    message: "Monthly payment added successfully",
+                    payment: existingPayment
+                });
+            }
         } else {
             // If no payment exists, create a new payment with initial monthly payment
             const paymentData = {
@@ -194,7 +238,7 @@ exports.createOrAddMonthlyPayment = async (req, res) => {
                 }
             });
 
-            res.status(201).json({ message: "Monthly payment created successfully", payment: newPayment });
+            return res.status(201).json({ message: "Monthly payment created successfully", payment: newPayment });
         }
     } catch (error) {
         console.error('Error creating or adding payment:', error);
@@ -373,13 +417,13 @@ exports.uploadProofOfReservation = async (req, res) => {
         await payment.save();
 
         // Send notification to landlord
-        await emailer.sendProofUploadNotificationEmail(landlordEmail, occupantName, roomId, "reservation", (error, response) => {
-            if (error) {
-                console.error("Error sending email:", error);
-            } else {
-                console.log("Email sent:", response);
-            }
-        });
+        // await emailer.sendProofUploadNotificationEmail(landlordEmail, occupantName, roomId, "reservation", (error, response) => {
+        //     if (error) {
+        //         console.error("Error sending email:", error);
+        //     } else {
+        //         console.log("Email sent:", response);
+        //     }
+        // });
 
         return res.status(200).json({ status: true, message: "Proof of reservation uploaded successfully." });
 

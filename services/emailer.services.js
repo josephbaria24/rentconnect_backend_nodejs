@@ -88,7 +88,7 @@ async function sendNotificationEmail(landlordEmail, message, callback) {
     const mailOptions = {
         from: 'rentconnect.it@gmail.com', // App's email
         to: landlordEmail, // Landlord's email
-        subject: "New Inquiry Notification",
+        subject: "Notification",
         html: htmlBody,
         replyTo: 'rentconnect.it@gmail.com' // Set the landlord's email as reply-to
     };

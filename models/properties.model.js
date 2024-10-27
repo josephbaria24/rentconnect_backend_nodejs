@@ -108,7 +108,29 @@ const propertySchema = new Schema({
     updated_at: {
         type: Date,
         default: Date.now
-    }
+    },
+
+    ratings: [{
+        occupantId: {
+            type: Schema.Types.ObjectId,
+            ref: 'user',
+            required: true
+        },
+        ratingValue: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5
+        },
+        comment: {
+            type: String,
+            required: false
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 });
 
 
