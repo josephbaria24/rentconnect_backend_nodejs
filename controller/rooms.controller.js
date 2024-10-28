@@ -248,3 +248,16 @@ exports.reserveRoom = async (req, res) => {
         res.status(500).json({ status: false, error: error.message });
     }
 };
+
+exports.getRoomById = async (req, res) => {
+    try {
+        const room = await RoomModel.findById(req.params.id)
+            .populate('occupantNonUsers'); // Populate the occupantNonUsers field to get details
+        if (!room) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+        res.status(200).json(room);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching room details', error });
+    }
+};

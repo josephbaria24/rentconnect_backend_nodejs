@@ -207,25 +207,51 @@ const getInquiriesByRoomId = async (req, res) => {
 };
 
 
-const checkPendingInquiry = async (req, res) => {
-  try {
-    const { userId, roomId } = req.query;
+// const checkPendingInquiry = async (req, res) => {
+//   try {
+//     const { userId, roomId } = req.query;
 
-    if (!userId || !roomId) {
-      return res.status(400).json({ message: 'userId and roomId are required.' });
+//     if (!userId || !roomId) {
+//       return res.status(400).json({ message: 'userId and roomId are required.' });
+//     }
+
+//     // Find if there is a pending inquiry for this user and room
+//     const existingInquiry = await Inquiry.findOne({
+//       userId,
+//       roomId,
+//       status: 'pending'
+//     });
+
+//     if (existingInquiry) {
+//       return res.json({ hasPendingRequest: true });
+//     } else {
+//       return res.json({ hasPendingRequest: false });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+const checkInquiry = async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required.' });
     }
 
-    // Find if there is a pending inquiry for this user and room
+    // Find if there are any inquiries for this user with pending or approved status
     const existingInquiry = await Inquiry.findOne({
       userId,
-      roomId,
-      status: 'pending'
+      status: { $in: ['pending', 'approved'] } // Check for pending or approved inquiries
     });
 
+    // If an inquiry exists (pending or approved), the user cannot inquire about any other rooms
     if (existingInquiry) {
-      return res.json({ hasPendingRequest: true });
+      return res.json({ canInquire: false, status: existingInquiry.status });
     } else {
-      return res.json({ hasPendingRequest: false });
+      return res.json({ canInquire: true });
     }
   } catch (error) {
     console.error(error);
@@ -766,7 +792,7 @@ const deleteRoomRepair = async (req, res) => {
 
 module.exports = {
   deleteInquiry,
-  checkPendingInquiry,
+  checkInquiry,
   getInquiriesByRoomId,
   createInquiry,
   getInquiriesByUserId,

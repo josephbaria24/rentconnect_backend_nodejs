@@ -78,6 +78,7 @@ const socketIo = require('socket.io');
 const rentalAgreementRoutes = require('./routers/rentalAgreement.router')
 const scheduler = require('./utils/sheduler');
 const pushNotification = require('./routers/push-notification.router')
+const occupant = require('./routers/occupant.routes')
 
 
 const app = express();
@@ -136,6 +137,7 @@ app.use('/payment', paymentRouter);
 app.use('/', otpRouter);
 app.use('/', rentalAgreementRoutes);
 app.use('/',pushNotification );
+app.use('/',occupant );
 
 // Set the io instance in your notification service
 const notificationService = require('./services/notification.services');

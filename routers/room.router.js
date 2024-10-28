@@ -20,6 +20,7 @@ router.delete('/deleteRoom/:id', RoomController.deleteRoom);
 router.get('/properties/:propertyId/rooms', RoomController.getRoomsByPropertyId);
 router.post('/reserve', RoomController.reserveRoom);
 router.post('/request-rent', RoomController.requestRent);
+router.get('/room/get/:id', RoomController.getRoomById); // Get room by ID
 
 
 
