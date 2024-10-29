@@ -25,6 +25,8 @@ router.delete('/delete/:inquiryId', inquiryController.deleteInquiry);
 router.put('/mark-as-occupied/:roomId', inquiryController.markRoomAsOccupied);
 router.patch('/reject/:inquiryId', inquiryController.rejectInquiry);
 router.get('/room/:roomId/property', inquiryController.getPropertyByRoomId);
+// New route for moving out inquiry
+router.post('/move-out', inquiryController.moveOutInquiry);
 
 
 // Add a room bill to a specific inquiry

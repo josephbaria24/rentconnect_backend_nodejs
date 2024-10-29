@@ -100,6 +100,35 @@ class RoomServices {
             throw new Error('Room is not available for rent');
         }
     }
+    static async markAsAvailable(roomId) {
+        try {
+            const room = await RoomModel.findById(roomId);
+            if (!room) {
+                throw new Error('Room not found');
+            }
+    
+            // Update room status to "available" and clear specified fields
+            room.roomStatus = 'available';
+            room.dueDate = null;
+            room.rentedDate = null;
+            room.reservedDate = null;
+            room.reservationExpiration = null;
+            room.reservationDuration = null;
+            room.occupantUsers = [];
+            room.occupantNonUsers = [];
+            room.reservationInquirers = [];
+
+    
+            // Save the updated room data to the database
+            await room.save();
+    
+            return room;
+        } catch (error) {
+            console.error('Error marking room as available:', error);
+            throw new Error('Failed to mark room as available');
+        }
+    }
+    
 }
 
 module.exports = RoomServices;

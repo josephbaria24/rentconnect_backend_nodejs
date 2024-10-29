@@ -21,7 +21,7 @@ router.get('/properties/:propertyId/rooms', RoomController.getRoomsByPropertyId)
 router.post('/reserve', RoomController.reserveRoom);
 router.post('/request-rent', RoomController.requestRent);
 router.get('/room/get/:id', RoomController.getRoomById); // Get room by ID
-
+router.put('/room/:roomId/markAsAvailable', RoomController.markRoomAsAvailable);
 
 
 router.put('/:id/due-date', async (req, res) => {

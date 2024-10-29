@@ -40,7 +40,77 @@ router.post('/rateProperty/:propertyId', async (req, res) => {
     }
 });
 
+// Route to update a rating
+router.put('/updateRating/:propertyId/:ratingId', async (req, res) => {
+    const { propertyId, ratingId } = req.params;
+    const { ratingValue, comment } = req.body;
 
+    try {
+        // Update the rating in the property model
+        const updatedProperty = await PropertyModel.findOneAndUpdate(
+            { _id: propertyId, 'ratings._id': ratingId },
+            { $set: { 'ratings.$.ratingValue': ratingValue, 'ratings.$.comment': comment } },
+            { new: true }
+        );
+
+        if (!updatedProperty) {
+            return res.status(404).json({ message: 'Rating not found' });
+        }
+
+        res.status(200).json({ message: 'Rating updated successfully', updatedProperty });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating rating', error });
+    }
+});
+
+// Route to delete a rating
+router.delete('/deleteRating/:propertyId/:ratingId', async (req, res) => {
+    const { propertyId, ratingId } = req.params;
+
+    try {
+        // Remove the rating from the property model
+        const updatedProperty = await PropertyModel.findByIdAndUpdate(
+            propertyId,
+            { $pull: { ratings: { _id: ratingId } } },
+            { new: true }
+        );
+
+        if (!updatedProperty) {
+            return res.status(404).json({ message: 'Rating not found' });
+        }
+
+        res.status(200).json({ message: 'Rating deleted successfully', updatedProperty });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting rating', error });
+    }
+});
+
+// GET rating for a specific property by a specific user
+router.get('/getRating/:propertyId/:userId', async (req, res) => {
+    const { propertyId, userId } = req.params;
+
+    try {
+        // Find the property by property ID and include ratings
+        const property = await PropertyModel.findById(propertyId, { ratings: 1 });
+
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
+        // Find the rating for the specific user
+        const rating = property.ratings.find(r => r.occupantId.toString() === userId);
+
+        if (!rating) {
+            return res.status(404).json({ message: 'Rating not found for this user' });
+        }
+
+        // Return the found rating
+        res.status(200).json(rating);
+    } catch (error) {
+        console.error('Error fetching rating:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 // Route to get average rating for a property
 router.get('/averageRating/:propertyId', async (req, res) => {
     try {

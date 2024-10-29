@@ -1,5 +1,3 @@
-//inquiry.model.js
-
 const db = require('../config/db');
 const mongoose = require('mongoose');
 
@@ -65,7 +63,10 @@ const inquirySchema = new mongoose.Schema({
   moveInDate: {
     type: Date, 
   },
-
+  moveOutDate: { // New field for tracking the move-out date
+    type: Date, // Date when the occupant is expected to move out
+    required: false // optional, as not all inquiries will have a move-out date
+  },
   roomBills: [{
     dueDate: { 
       type: Date 
@@ -147,9 +148,6 @@ const inquirySchema = new mongoose.Schema({
       },
     },
   }],
-  
-
-
   // New field for room repair requests
   roomRepairs: [{
     repairType: { 

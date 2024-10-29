@@ -6,6 +6,9 @@ const Inquiry = require('../models/inquiries')
 const RoomServices = require('../services/room.services')
 const cron = require('node-cron');
 const { calculateRemainingTime } = require('../utils/timeUtils');
+const EndedInquiry = require('../models/endedInquiry.model'); // Import the new model
+
+
 // Create a new inquiry
 const createInquiry = async (req, res) => {
   try {
@@ -789,6 +792,40 @@ const deleteRoomRepair = async (req, res) => {
   }
 };
 
+const moveOutInquiry = async (req, res) => {
+  try {
+    const { userId, roomId, moveOutDate } = req.body;
+
+    // Validate input
+    if (!userId || !roomId || !moveOutDate) {
+      return res.status(400).json({ error: 'User ID, Room ID, and Move Out Date are required.' });
+    }
+
+    // Find the inquiry to move out
+    const inquiry = await Inquiry.findOne({ userId, roomId, status: 'pending' });
+    if (!inquiry) {
+      return res.status(404).json({ error: 'Inquiry not found.' });
+    }
+
+    // Create a new ended inquiry record
+    const endedInquiryData = {
+      userId,
+      roomId,
+      requestType: inquiry.requestType,
+      moveOutDate,
+    };
+
+    const endedInquiry = new EndedInquiry(endedInquiryData);
+    await endedInquiry.save();
+
+    // Optionally delete the inquiry from the inquiries collection
+    await Inquiry.deleteOne({ _id: inquiry._id });
+
+    res.status(200).json({ message: 'Inquiry moved out successfully.', endedInquiry });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   deleteInquiry,
@@ -811,6 +848,7 @@ module.exports = {
   addRoomRepair,
   updateRoomRepair,
   deleteRoomRepair,
-  updateRoomBillIsPaid
+  updateRoomBillIsPaid,
+  moveOutInquiry,
 
 };

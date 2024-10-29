@@ -261,3 +261,17 @@ exports.getRoomById = async (req, res) => {
         res.status(500).json({ message: 'Error fetching room details', error });
     }
 };
+
+
+
+exports.markRoomAsAvailable = async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        const updatedRoom = await RoomServices.markAsAvailable(roomId);
+
+        res.json({ status: true, success: updatedRoom });
+    } catch (error) {
+        console.error('Error marking room as available:', error);
+        res.status(400).send({ error: error.message });
+    }
+};
