@@ -109,6 +109,17 @@ const propertySchema = new Schema({
         type: Date,
         default: Date.now
     },
+    views: [{
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'user',
+            required: true,
+        },
+        timestamp: {
+            type: Date,
+            default: Date.now,
+        }
+    }],
 
     ratings: [{
         occupantId: {

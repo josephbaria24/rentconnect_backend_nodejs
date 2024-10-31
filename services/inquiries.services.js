@@ -33,11 +33,20 @@ const getInquiriesByPropertyId = async (propertyId) => {
 const getInquiriesByRoomId = async (roomId) => {
   return await Inquiry.find({ roomId }).populate('roomId');
 };
+
+
+const getRentedInquiriesWithinDateRange = async (startDate, endDate) => {
+  return await Inquiry.find({
+    isRented: true,
+    moveInDate: { $gte: startDate, $lte: endDate }
+  });
+};
 module.exports = {
   createInquiry,
   getInquiriesByUserId,
   getInquiriesByRoomOwner,
   updateInquiryStatus,
   getInquiriesByRoomId,
-  getInquiriesByPropertyId, // Add this line
+  getInquiriesByPropertyId,
+  getRentedInquiriesWithinDateRange
 };

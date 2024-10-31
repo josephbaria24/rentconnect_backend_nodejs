@@ -78,10 +78,15 @@ class PropertyServices {
     
         return property; // Return the deleted property for confirmation
     }
-    // Add the update method in PropertyServices
+    
+    static async incrementViews(propertyId) {
+        return await PropertyModel.findByIdAndUpdate(propertyId, { $inc: { views: 1 } }, { new: true });
+    }
 
-   
-
+    static async getPropertyViews(propertyId) {
+        const property = await PropertyModel.findById(propertyId);
+        return property ? property.views : 0; // Return the count of views, or 0 if property not found
+    }
     
 }
 

@@ -178,3 +178,63 @@ exports.deleteProperty = async (req, res, next) => {
 };
 
 
+exports.incrementPropertyView = async (req, res) => {
+    try {
+        const propertyId = req.params.id; // Assuming property ID is passed in the URL
+        const userId = req.body.userId; // Get userId from the request body
+
+        // Fetch the property by its ID
+        const property = await PropertyModel.findById(propertyId);
+
+        // Check if the property exists
+        if (!property) {
+            return res.status(404).json({
+                success: false,
+                message: 'Property not found.'
+            });
+        }
+
+        // Check if the user has already viewed this property
+        const hasViewed = property.views.some(view => view.userId.toString() === userId);
+
+        if (!hasViewed) {
+            // Increment view count only if this user hasn't viewed the property yet
+            property.views.push({ userId });
+            await property.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'View count incremented successfully.',
+                views: property.views.length // Return the total views
+            });
+        } else {
+            // If the user has already viewed the property
+            return res.status(200).json({
+                success: true,
+                message: 'User has already viewed this property.',
+                views: property.views.length // Return the total views
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+exports.getPropertyViews = async (req, res) => {
+    try {
+        const propertyId = req.params.id; // Assuming property ID is passed in the URL
+        const views = await PropertyServices.getPropertyViews(propertyId);
+
+        // Ensure that 'views' is an array of view objects with timestamps
+        res.status(200).json({
+            success: true,
+            views: views // Return the array of views
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+
+

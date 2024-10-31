@@ -210,32 +210,6 @@ const getInquiriesByRoomId = async (req, res) => {
 };
 
 
-// const checkPendingInquiry = async (req, res) => {
-//   try {
-//     const { userId, roomId } = req.query;
-
-//     if (!userId || !roomId) {
-//       return res.status(400).json({ message: 'userId and roomId are required.' });
-//     }
-
-//     // Find if there is a pending inquiry for this user and room
-//     const existingInquiry = await Inquiry.findOne({
-//       userId,
-//       roomId,
-//       status: 'pending'
-//     });
-
-//     if (existingInquiry) {
-//       return res.json({ hasPendingRequest: true });
-//     } else {
-//       return res.json({ hasPendingRequest: false });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
 const checkInquiry = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -541,86 +515,6 @@ const updateRoomBillIsPaid = async (req, res) => {
 };
 
 
-// const addRoomBill = async (req, res) => {
-//   const { inquiryId } = req.params;
-//   const { electricity, water, maintenance, internet, dueDate } = req.body; // Add dueDate to the body
-
-//   try {
-//     const inquiry = await Inquiry.findById(inquiryId);
-    
-//     if (!inquiry) {
-//       return res.status(404).json({ message: 'Inquiry not found' });
-//     }
-
-//     // Parse dueDate to remove hours for comparison
-//     const normalizedDueDate = new Date(dueDate);
-//     normalizedDueDate.setHours(0, 0, 0, 0); // Remove hours for accurate monthly check
-
-//     // Check if a bill for the same month and year already exists
-//     const existingBill = inquiry.roomBills.find(bill => {
-//       const billDueDate = new Date(bill.dueDate);
-//       billDueDate.setHours(0, 0, 0, 0); // Normalize bill dueDate for comparison
-
-//       return (
-//         billDueDate.getFullYear() === normalizedDueDate.getFullYear() &&
-//         billDueDate.getMonth() === normalizedDueDate.getMonth()
-//       );
-//     });
-
-//     if (existingBill) {
-//       // If the bill for the same month exists, prompt the user to view it instead
-//       return res.status(409).json({
-//         message: 'A bill for this month already exists. Do you want to view it?',
-//         billId: existingBill._id
-//       });
-//     }
-
-//     // Create a new bill
-//     const billData = {
-//       dueDate: dueDate || null,
-//       created_at: Date.now(),
-//       updated_at: Date.now(), // Shared dueDate for all bill types
-//       electricity: {
-//         amount: electricity?.amount || null, // Allow null if not provided
-//         isPaid: electricity?.isPaid || false, // Default to false if not provided
-//         paymentDate: electricity?.paymentDate || null,
-//         created_at: Date.now(),
-//         updated_at: Date.now(),
-//       },
-//       water: {
-//         amount: water?.amount || null, // Allow null if not provided
-//         isPaid: water?.isPaid || false,
-//         paymentDate: water?.paymentDate || null,
-//         created_at: Date.now(),
-//         updated_at: Date.now(),
-//       },
-//       maintenance: {
-//         amount: maintenance?.amount || null, // Allow null if not provided
-//         isPaid: maintenance?.isPaid || false,
-//         paymentDate: maintenance?.paymentDate || null,
-//         created_at: Date.now(),
-//         updated_at: Date.now(),
-//       },
-//       internet: {
-//         amount: internet?.amount || null, // Allow null if not provided
-//         isPaid: internet?.isPaid || false,
-//         paymentDate: internet?.paymentDate || null,
-//         created_at: Date.now(),
-//         updated_at: Date.now(),
-//       },
-//     };
-
-//     // Add new bill to roomBills
-//     inquiry.roomBills.push(billData);
-//     await inquiry.save();
-
-//     res.status(201).json({ message: 'Room bill added successfully', inquiry });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
-
 
 
 const updateRoomBill = async (req, res) => {
@@ -827,7 +721,11 @@ const moveOutInquiry = async (req, res) => {
   }
 };
 
+
+
+
 module.exports = {
+ 
   deleteInquiry,
   checkInquiry,
   getInquiriesByRoomId,

@@ -12,6 +12,18 @@ router.get('/getUserBookmarks/:userId', PropertyController.getBookmarkedProperti
 router.delete('/deleteProperty/:id', PropertyController.deleteProperty);
 router.put('/properties/:propertyId', PropertyController.uploadPhotos, PropertyController.updateProperty);
 
+
+// Route to increment property views
+router.post('/properties/:id/view', PropertyController.incrementPropertyView);
+
+// Route to get total property views
+router.get('/properties/:id/views', PropertyController.getPropertyViews);
+
+
+
+
+
+
 router.post('/rateProperty/:propertyId', async (req, res) => {
     const { propertyId } = req.params;
     const { userId, ratingValue, comment } = req.body;
