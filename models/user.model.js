@@ -70,7 +70,11 @@ const userSchema = new Schema({
     player_id: {
         type: String,
         required: false, // not all users might have it initially
-    }
+    },
+    profile: {
+        type: Schema.Types.ObjectId,
+        ref: 'Profile' // Make sure the name here matches your Profile model
+    },
 });
 
 

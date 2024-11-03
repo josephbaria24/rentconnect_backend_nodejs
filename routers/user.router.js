@@ -8,6 +8,7 @@ const { sendResetPasswordEmail } = require('../services/emailer.services'); // Y
 const User = require('../models/user.model'); // Your User model
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { ProfileModel } = require('../models/profile.model');
 
 router.post('/registration', UserController.register);
 router.post('/login', UserController.login);
@@ -24,6 +25,28 @@ router.post('/createRentalRequest', UserController.createRentalRequest);
 router.get('/notifications/:userId', UserController.getUserNotifications);
 router.patch('/updatePassword', UserController.updatePassword);
 router.post('/verify-email-otp', UserController.verifyEmailOTP);
+
+// Route to get all users with their profiles
+router.get('/users-with-profiles', async (req, res) => {
+    try {
+      // Find all users and populate their associated profiles
+      const users = await User.find().populate({
+        path: 'profile',
+        model: ProfileModel,
+        populate: {
+          path: 'userId', // Join userId with UserModel
+          select: 'email role profilePicture isEmailVerified firstName lastName', // Select specific fields from User
+        },
+      });
+  
+      res.status(200).json({ success: true, users });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Failed to retrieve users and profiles', error });
+    }
+  });
+
+
 
 // Resend OTP Route
 router.post('/resend-otp', (req, res) => {
