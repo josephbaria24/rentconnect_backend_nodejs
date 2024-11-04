@@ -25,11 +25,33 @@ router.post('/messages', async (req, res) => {
 });
 
 // Endpoint to get messages between sender and recipient
-router.get('/messages', async (req, res) => {
-    const { sender, recipient, userId } = req.query; // Assume userId is the user making the request
+// router.get('/messages', async (req, res) => {
+//     const { sender, recipient } = req.query;
 
-    if (!sender || !recipient || !userId) {
-        return res.status(400).json({ message: 'Sender, recipient, and userId are required' });
+//     if (!sender || !recipient) {
+//         return res.status(400).json({ message: 'Sender and recipient are required' });
+//     }
+
+//     try {
+//         const messages = await MessageModel.find({
+//             $or: [
+//                 { sender, recipient },
+//                 { sender: recipient, recipient: sender }
+//             ]
+//         }).sort({ sentAt: 1 }); // Sort by sentAt to maintain order
+
+//         res.json(messages);
+//     } catch (error) {
+//         console.error('Error fetching messages:', error);
+//         res.status(500).json({ message: 'Error fetching messages' });
+//     }
+// });
+
+router.get('/messages', async (req, res) => {
+    const { sender, recipient } = req.query;
+
+    if (!sender || !recipient) {
+        return res.status(400).json({ message: 'Sender and recipient are required' });
     }
 
     try {
@@ -37,21 +59,55 @@ router.get('/messages', async (req, res) => {
             $or: [
                 { sender, recipient },
                 { sender: recipient, recipient: sender }
+            ],
+            // Ensure that messages are not marked as deleted for either sender or recipient
+            $or: [
+                { [`deleted.${sender}`]: { $ne: true } },
+                { [`deleted.${recipient}`]: { $ne: true } }
             ]
-        }).sort({ sentAt: 1 });
+        }).sort({ sentAt: 1 }); // Sort by sentAt to maintain order
 
-        // Add deleted flag check
-        const filteredMessages = messages.map(message => {
-            const isDeletedForUser = message.deleted.get(userId) || false;
-            return { ...message.toObject(), isDeletedForUser };
-        });
-
-        res.json(filteredMessages);
+        res.json(messages);
     } catch (error) {
         console.error('Error fetching messages:', error);
         res.status(500).json({ message: 'Error fetching messages' });
     }
 });
+
+
+
+// Mark messages as deleted for a specific user
+router.patch('/messages/markAsDeleted', async (req, res) => {
+    const { userId, recipientId } = req.body;
+
+    if (!userId || !recipientId) {
+        return res.status(400).json({ error: 'User ID and Recipient ID are required' });
+    }
+
+    try {
+        const updatedMessages = await MessageModel.updateMany(
+            {
+                $or: [
+                    { sender: userId, recipient: recipientId },
+                    { sender: recipientId, recipient: userId }
+                ]
+            },
+            { $set: { [`deleted.${userId}`]: true } } // Set the deleted flag for the user
+        );
+
+        if (updatedMessages.modifiedCount === 0) {
+            return res.status(404).json({ message: 'No messages found for this user-recipient pair' });
+        }
+
+        res.status(200).json({ message: 'Messages marked as deleted' });
+    } catch (error) {
+        console.error('Error marking messages as deleted:', error);
+        res.status(500).json({ error: 'Failed to mark messages as deleted' });
+    }
+});
+
+
+
 
 // GET route to retrieve all conversations for a user
 router.get('/conversations/:userId', async (req, res) => {
@@ -96,7 +152,7 @@ router.get('/conversations/:userId', async (req, res) => {
                     },
                     lastMessage: { $first: "$content" },
                     time: { $first: "$sentAt" },
-                    isUnread: { $first: "$isUnread" },
+                    isRead: { $first: "$isRead" },
                     deleted: { $first: { $ifNull: [`$deleted.${userId}`, false] } } // Check if conversation is deleted for the user
                 }
             },
@@ -139,7 +195,7 @@ router.get('/conversations/:userId', async (req, res) => {
                     recipientId: "$_id.conversationWith",
                     lastMessage: 1,
                     time: 1,
-                    isUnread: 1,
+                    isRead: 1,
                     profilePicture: "$userInfo.profilePicture",
                     firstName: "$profileInfo.firstName",
                     lastName: "$profileInfo.lastName"
@@ -160,53 +216,54 @@ router.get('/conversations/:userId', async (req, res) => {
 
 
 
+
+
 // Mark message as unread/read
-router.patch('/messages/:id/markAsUnread', async (req, res) => {
+router.patch('/messages/markAsUnread', async (req, res) => {
     try {
-        const { id } = req.params;
-        const message = await MessageModel.findByIdAndUpdate(
-            id,
-            { isRead: false },
-            { new: true }
-        );
-        if (!message) {
-            return res.status(404).json({ error: 'Message not found' });
-        }
-        res.json({ message: 'Message marked as unread', data: message });
-    } catch (error) {
-        console.error('Error marking message as unread:', error);
-        res.status(500).json({ error: 'Failed to mark message as unread' });
-    }
-});
+        const { recipient } = req.body; // Get recipient ID from request body
 
-// Mark messages as deleted for a specific user
-router.patch('/messages/markAsDeleted', async (req, res) => {
-    const { userId, recipientId } = req.body;
-
-    if (!userId || !recipientId) {
-        return res.status(400).json({ error: 'User ID and Recipient ID are required' });
-    }
-
-    try {
+        // Find messages belonging to the recipient that should be marked as unread
         const updatedMessages = await MessageModel.updateMany(
-            {
-                $or: [
-                    { sender: userId, recipient: recipientId },
-                    { sender: recipientId, recipient: userId }
-                ]
-            },
-            { $set: { [`deleted.${userId}`]: true } } // Set the deleted flag for the user
+            { recipient: recipient, isRead: true }, // Adjust the condition as necessary
+            { isRead: false }, // Update the field
+            { new: true } // Return the updated documents
         );
 
-        if (updatedMessages.modifiedCount === 0) {
-            return res.status(404).json({ message: 'No messages found for this user-recipient pair' });
+        // Check if any messages were updated
+        if (updatedMessages.matchedCount === 0) {
+            return res.status(404).json({ error: 'No messages found for the recipient' });
         }
 
-        res.status(200).json({ message: 'Messages marked as deleted' });
+        res.json({ message: 'Messages marked as unread', data: updatedMessages });
     } catch (error) {
-        console.error('Error marking messages as deleted:', error);
-        res.status(500).json({ error: 'Failed to mark messages as deleted' });
+        console.error('Error marking messages as unread:', error);
+        res.status(500).json({ error: 'Failed to mark messages as unread' });
     }
 });
+// Mark message as unread/read
+router.patch('/messages/markAsRead', async (req, res) => {
+    try {
+        const { recipient } = req.body; // Get recipient ID from request body
+
+        // Find messages belonging to the recipient that should be marked as unread
+        const updatedMessages = await MessageModel.updateMany(
+            { recipient: recipient }, // Adjust the condition as necessary
+            { isRead: true }, // Update the field
+            { new: true } // Return the updated documents
+        );
+
+        // Check if any messages were updated
+        if (updatedMessages.matchedCount === 0) {
+            return res.status(404).json({ error: 'No messages found for the recipient' });
+        }
+
+        res.json({ message: 'Messages marked as unread', data: updatedMessages });
+    } catch (error) {
+        console.error('Error marking messages as unread:', error);
+        res.status(500).json({ error: 'Failed to mark messages as unread' });
+    }
+});
+
 
 module.exports = router;
