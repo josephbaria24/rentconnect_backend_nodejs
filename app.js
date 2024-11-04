@@ -61,12 +61,13 @@ io.on('connection', (socket) => {
       recipient: msg.recipient,
       sentAt: new Date(),
     };
+    
 
     // Push message to in-memory array (or save to DB in real-world applications)
     messages.push(message);
 
     // Emit the message to the sender and recipient
-    io.to(msg.sender).emit('message', message);  // Send message to the sender
+    io.to(email).emit('message', message);  // Send message to the sender
     io.to(msg.recipient).emit('message', message);  // Send message to the recipient
   });
 

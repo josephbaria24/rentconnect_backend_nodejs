@@ -20,6 +20,15 @@ const messageSchema = new Schema({
     sentAt: {
         type: Date,
         default: Date.now
+    },
+    isRead: {
+        type: Boolean,
+        default: false
+    },
+    deleted: {
+        type: Map,
+        of: Boolean,
+        default: {}
     }
 });
 

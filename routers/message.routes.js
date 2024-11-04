@@ -26,10 +26,10 @@ router.post('/messages', async (req, res) => {
 
 // Endpoint to get messages between sender and recipient
 router.get('/messages', async (req, res) => {
-    const { sender, recipient } = req.query;
+    const { sender, recipient, userId } = req.query; // Assume userId is the user making the request
 
-    if (!sender || !recipient) {
-        return res.status(400).json({ message: 'Sender and recipient are required' });
+    if (!sender || !recipient || !userId) {
+        return res.status(400).json({ message: 'Sender, recipient, and userId are required' });
     }
 
     try {
@@ -38,15 +38,20 @@ router.get('/messages', async (req, res) => {
                 { sender, recipient },
                 { sender: recipient, recipient: sender }
             ]
-        }).sort({ sentAt: 1 }); // Sort by sentAt to maintain order
+        }).sort({ sentAt: 1 });
 
-        res.json(messages);
+        // Add deleted flag check
+        const filteredMessages = messages.map(message => {
+            const isDeletedForUser = message.deleted.get(userId) || false;
+            return { ...message.toObject(), isDeletedForUser };
+        });
+
+        res.json(filteredMessages);
     } catch (error) {
         console.error('Error fetching messages:', error);
         res.status(500).json({ message: 'Error fetching messages' });
     }
 });
-
 
 // GET route to retrieve all conversations for a user
 router.get('/conversations/:userId', async (req, res) => {
@@ -91,7 +96,13 @@ router.get('/conversations/:userId', async (req, res) => {
                     },
                     lastMessage: { $first: "$content" },
                     time: { $first: "$sentAt" },
-                    isUnread: { $first: "$isUnread" }
+                    isUnread: { $first: "$isUnread" },
+                    deleted: { $first: { $ifNull: [`$deleted.${userId}`, false] } } // Check if conversation is deleted for the user
+                }
+            },
+            {
+                $match: {
+                    deleted: false // Only include conversations that are not marked as deleted
                 }
             },
             {
@@ -144,6 +155,57 @@ router.get('/conversations/:userId', async (req, res) => {
     } catch (error) {
         console.error('Error fetching conversations:', error);
         res.status(500).json({ error: 'Failed to retrieve conversations' });
+    }
+});
+
+
+
+// Mark message as unread/read
+router.patch('/messages/:id/markAsUnread', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const message = await MessageModel.findByIdAndUpdate(
+            id,
+            { isRead: false },
+            { new: true }
+        );
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+        res.json({ message: 'Message marked as unread', data: message });
+    } catch (error) {
+        console.error('Error marking message as unread:', error);
+        res.status(500).json({ error: 'Failed to mark message as unread' });
+    }
+});
+
+// Mark messages as deleted for a specific user
+router.patch('/messages/markAsDeleted', async (req, res) => {
+    const { userId, recipientId } = req.body;
+
+    if (!userId || !recipientId) {
+        return res.status(400).json({ error: 'User ID and Recipient ID are required' });
+    }
+
+    try {
+        const updatedMessages = await MessageModel.updateMany(
+            {
+                $or: [
+                    { sender: userId, recipient: recipientId },
+                    { sender: recipientId, recipient: userId }
+                ]
+            },
+            { $set: { [`deleted.${userId}`]: true } } // Set the deleted flag for the user
+        );
+
+        if (updatedMessages.modifiedCount === 0) {
+            return res.status(404).json({ message: 'No messages found for this user-recipient pair' });
+        }
+
+        res.status(200).json({ message: 'Messages marked as deleted' });
+    } catch (error) {
+        console.error('Error marking messages as deleted:', error);
+        res.status(500).json({ error: 'Failed to mark messages as deleted' });
     }
 });
 
