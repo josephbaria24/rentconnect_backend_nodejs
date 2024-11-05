@@ -35,6 +35,7 @@ const pushNotification = require('./routers/push-notification.router')
 const occupant = require('./routers/occupant.routes');
 const trends = require('./routers/trends.router')
 const messageRoutes = require('./routers/message.routes'); // Adjust path as necessary
+const smsRoute = require('./routers/sms.route'); // Adjust path as necessary
 
 
 
@@ -128,6 +129,7 @@ cron.schedule('0 0 * * *', () => {
 
 // Route handlers
 app.use('/', userRouter);
+app.use('/', smsRoute);
 app.use('/', propertyRouter);
 app.use('/profile', profileRouter);
 app.use('/rooms', roomRouter);
