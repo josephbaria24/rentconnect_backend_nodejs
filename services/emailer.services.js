@@ -294,9 +294,85 @@ async function sendProofUploadNotificationEmail(landlordEmail, occupantName, roo
         }
     });
 }
+// Function to send email notification to admin
+async function sendNewPropertyEmail(property, callback) {
+    const htmlBody = `
+        <div style="font-family: Arial, sans-serif; text-align: center;">
+            <h2>New Property Listing Request</h2>
+            <p>A new property has been listed for review:</p>
+            <p><strong>Property ID:</strong> ${property._id}</p>
+            <p><strong>Description:</strong> ${property.description}</p>
+            <p><strong>Location:</strong> ${property.street}, ${property.barangay}, ${property.city}</p>
+            <p>Please review the listing in the admin panel.</p>
+            <p>*Note: The landlord might still adding rooms, please wait for his/her to finish.</p>
+        </div>
+    `;
 
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // use TLS
+        auth: {
+            user: '7d268b001@smtp-brevo.com',  // Your Brevo login
+            pass: 'BwGgTIEQmzCOHqZ1'          // Your Brevo password
+        }
+    });
 
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com',          // Sender email
+        to: 'rentconnect.it@gmail.com',            // Admin email
+        subject: "New Property Listing Request",   // Subject of the email
+        html: htmlBody                             // HTML body of the email
+    };
 
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
+
+// Function to send email notification to admin for profile update request
+async function sendProfileUpdateEmail(profile, callback) {
+    const htmlBody = `
+        <div style="font-family: Arial, sans-serif; text-align: center;">
+            <h2>Profile Update Request</h2>
+            <p>A user has requested a profile update:</p>
+            <p><strong>User ID:</strong> ${profile.userId}</p>
+            <p><strong>Full Name:</strong> ${profile.firstName} ${profile.lastName}</p>
+            <p><strong>Phone:</strong> ${profile.contactDetails.phone}</p>
+            <p><strong>Address:</strong> ${profile.contactDetails.address}</p>
+            <p>Please review the update request in the admin panel.</p>
+        </div>
+    `;
+
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // use TLS
+        auth: {
+            user: '7d268b001@smtp-brevo.com',  // Your Brevo login
+            pass: 'BwGgTIEQmzCOHqZ1'          // Your Brevo password
+        }
+    });
+
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com',           // Sender email
+        to: 'rentconnect.it@gmail.com',             // Admin email
+        subject: "Profile Update Request",          // Subject of the email
+        html: htmlBody                              // HTML body of the email
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
 
 
 module.exports = {
@@ -306,5 +382,7 @@ module.exports = {
     sendResetPasswordEmail,
     sendRentalAgreementEmail,
     sendBillingStatementEmail,
-    sendProofUploadNotificationEmail
+    sendProofUploadNotificationEmail,
+    sendNewPropertyEmail,
+    sendProfileUpdateEmail
 };

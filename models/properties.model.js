@@ -98,7 +98,7 @@ const propertySchema = new Schema({
       },
     status: {
         type: String,
-        enum: ['Approved', 'Under Review', 'Failed', 'Waiting'],
+        enum: ['Approved', 'Under Review', 'Rejected', 'Waiting'],
         default: 'Waiting'
     },
     created_at: {

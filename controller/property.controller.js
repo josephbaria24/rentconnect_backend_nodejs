@@ -1,6 +1,7 @@
 const PropertyModel = require("../models/properties.model");
 const PropertyServices = require("../services/property.services");
 const  upload  = require('../multerConfig');
+const {sendNewPropertyEmail} = require('../services/emailer.services');
 
 // Middleware for handling multiple file uploads
 exports.uploadPhotos = upload.fields([
@@ -11,7 +12,6 @@ exports.uploadPhotos = upload.fields([
     { name: 'legalDocPhoto2', maxCount: 1 }, // Additional legal doc photo 2
     { name: 'legalDocPhoto3', maxCount: 1 }, // Additional legal doc photo 3
 ]);
-
 exports.createProperty = async (req, res, next) => {
     try {
         console.log('Files:', req.files);  // Debugging line
@@ -39,6 +39,7 @@ exports.createProperty = async (req, res, next) => {
             parsedLocation = location;
         }
 
+        // Create the property
         let property = await PropertyServices.createProperty(
             userId, description, photo, photo2, photo3, legalDocPhoto, legalDocPhoto2, legalDocPhoto3, street, barangay, city, amenities, status, typeOfProperty, parsedLocation
         );
@@ -47,11 +48,22 @@ exports.createProperty = async (req, res, next) => {
             return res.status(500).json({ error: 'Error saving property. No propertyId found.' });
         }
 
+        // Send email notification to admin
+        sendNewPropertyEmail(property, (error, response) => {
+            if (error) {
+                console.error('Error sending email:', error);
+            } else {
+                console.log('Email sent:', response);
+            }
+        });
+
+        // Respond with success
         res.json({ status: true, propertyId: property._id, property });
     } catch (error) {
         next(error);
     }
 };
+
 
 exports.updateProperty = async (req, res, next) => {
     try {
@@ -94,6 +106,19 @@ exports.updateProperty = async (req, res, next) => {
         // Add parsed location to updates
         updates.location = parsedLocation; // Add the parsed location to the updates object
 
+        // Fetch the current property to check the status
+        const currentProperty = await PropertyModel.findById(propertyId);
+
+        if (!currentProperty) {
+            return res.status(404).json({ status: false, error: 'Property not found' });
+        }
+
+        // Check if the current status is "Approved" or "Rejected" and apply the condition
+        if (currentProperty.status === 'Approved' || currentProperty.status === 'Rejected') {
+            updates.status = 'Waiting'; // Set status to "Waiting" if it's "Approved" or "Rejected"
+        }
+
+        // Perform the update
         const updatedProperty = await PropertyServices.updateProperty(propertyId, updates);
 
         if (!updatedProperty) {
@@ -105,6 +130,7 @@ exports.updateProperty = async (req, res, next) => {
         next(error);
     }
 };
+
 
 exports.getUserProperty = async (req, res, next) => {
     try {

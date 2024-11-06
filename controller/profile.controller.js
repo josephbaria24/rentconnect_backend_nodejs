@@ -3,37 +3,48 @@ const upload = require('../multerConfig'); // Adjust the path if needed
 const path = require('path');
 const ProfileService = require('../services/profile.services');
 const UserModel = require('../models/user.model')
+const {sendProfileUpdateEmail} = require('../services/emailer.services')
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { userId, firstName, lastName, gender, phone, address, isProfileComplete } = req.body;
+      const { userId, firstName, lastName, gender, phone, address, isProfileComplete } = req.body;
 
-    const updateData = {
-      firstName,
-      lastName,
-      gender,
-      contactDetails: {
-        phone,
-        address,
-      },
-      isProfileComplete,
-      profileStatus: 'pending', // Set profile status to pending
-      updated_at: Date.now(),
-    };
+      const updateData = {
+          firstName,
+          lastName,
+          gender,
+          contactDetails: {
+              phone,
+              address,
+          },
+          isProfileComplete,
+          profileStatus: 'pending', // Set profile status to pending
+          updated_at: Date.now(),
+      };
 
-    // Call to the service to update the profile
-    const profile = await ProfileService.updateProfile(userId, updateData);
+      // Call to the service to update the profile
+      const profile = await ProfileService.updateProfile(userId, updateData);
 
-    if (profile) {
-      return res.status(200).json({ status: true, profile });
-    } else {
-      return res.status(400).json({ status: false, message: 'Profile not found' });
-    }
+      if (profile) {
+          // Send email notification to admin for profile update request
+          sendProfileUpdateEmail(updateData, (error, response) => {
+              if (error) {
+                  console.error('Error sending email:', error);
+              } else {
+                  console.log('Email sent:', response);
+              }
+          });
+
+          return res.status(200).json({ status: true, profile });
+      } else {
+          return res.status(400).json({ status: false, message: 'Profile not found' });
+      }
   } catch (error) {
-    console.error('Error updating profile:', error);
-    return res.status(500).json({ status: false, error: error.message });
+      console.error('Error updating profile:', error);
+      return res.status(500).json({ status: false, error: error.message });
   }
 };
+
 
 exports.uploadValidId = (req, res) => {
   upload.single('validIdImage')(req, res, async (err) => {
