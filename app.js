@@ -36,7 +36,7 @@ const occupant = require('./routers/occupant.routes');
 const trends = require('./routers/trends.router')
 const messageRoutes = require('./routers/message.routes'); // Adjust path as necessary
 const smsRoute = require('./routers/sms.route'); // Adjust path as necessary
-
+const appUpdate = require('./routers/appUpdate.routes');
 
 
 const { createServer } = require('node:http');
@@ -129,6 +129,7 @@ cron.schedule('0 0 * * *', () => {
 
 // Route handlers
 app.use('/', userRouter);
+app.use('/', appUpdate);
 app.use('/', smsRoute);
 app.use('/', propertyRouter);
 app.use('/profile', profileRouter);
