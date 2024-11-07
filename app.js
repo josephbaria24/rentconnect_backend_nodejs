@@ -79,10 +79,19 @@ io.on('connection', (socket) => {
 });
 
 
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.url);
+  next();
+});
 
 
 
-
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 
 //const server = http.createServer(app);
 //const io = socketIo(server); // Create Socket.IO server

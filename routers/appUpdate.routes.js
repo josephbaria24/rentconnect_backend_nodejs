@@ -4,8 +4,8 @@ const router = express.Router();
 // Endpoint to return the latest version and APK URL
 router.get('/download/version', (req, res) => {
   const versionInfo = {
-    latest_version: "1.0.1", // Update this whenever you release a new version
-    download_url: "https://drive.google.com/uc?export=download&id=1P2tPlp8TpVQwkTBfBlHMjfpCulP4KRVP"
+    latest_version: "1.0.2",
+    download_url: "https://drive.google.com/uc?export=download&id=1A8X0KDhzi-S3-EaBGjFfA5iLP5dbcju8"
   };
   
   res.json(versionInfo);
