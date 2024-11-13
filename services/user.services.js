@@ -15,15 +15,22 @@ class UserService{
         try {
             // Check if the email already exists
             const existingUser = await UserModel.findOne({ email });
+            
             if (existingUser) {
-                throw new Error('Email already registered');
+                if (existingUser.verificationCode) {
+                    // User exists but has not completed verification
+                    throw new Error('Email already registered but not verified');
+                } else {
+                    // User exists and is verified
+                    throw new Error('Email already registered and verified');
+                }
             }
     
-            // Create user
+            // Create a new user if email is not found
             const createUser = new UserModel({ email, password });
     
             // Generate OTP for email verification
-            const otpParams = { email }; // Just pass the email, OTP generation logic is in otp.services.js
+            const otpParams = { email };
             otpService.sendOTP(otpParams, async (error, fullHash) => {
                 if (error) throw error;
     
@@ -37,6 +44,7 @@ class UserService{
             throw err; // Rethrow error for controller to catch
         }
     }
+    
     static async verifyEmailOTP(email, otp) {
         try {
             return new Promise(async (resolve, reject) => {

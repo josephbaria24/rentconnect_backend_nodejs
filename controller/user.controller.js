@@ -298,6 +298,20 @@ exports.resetPassword = async (req, res) => {
 };
 
 
+// exports.register = async (req, res, next) => {
+//     try {
+//         const { email, password } = req.body;
+
+//         // Register user and send OTP for email verification
+//         const successRes = await UserService.registerUser(email, password);
+//         res.json({ status: true, success: "User Registered. Check your email for OTP." });
+//     } catch (error) {
+//         if (error.message === 'Email already registered') {
+//             return res.status(400).json({ status: false, error: 'Email already registered' });
+//         }
+//         res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
+//     }
+// };
 exports.register = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -306,12 +320,17 @@ exports.register = async (req, res, next) => {
         const successRes = await UserService.registerUser(email, password);
         res.json({ status: true, success: "User Registered. Check your email for OTP." });
     } catch (error) {
-        if (error.message === 'Email already registered') {
-            return res.status(400).json({ status: false, error: 'Email already registered' });
+        if (error.message === 'Email already registered but not verified') {
+            return res.status(400).json({ status: false, error: 'Email already registered but not verified' });
+        } else if (error.message === 'Email already registered and verified') {
+            return res.status(400).json({ status: false, error: 'Email already registered and verified' });
+        } else {
+            // For unexpected errors
+            res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
         }
-        res.status(500).json({ status: false, error: 'Registration failed. Please try again.' });
     }
 };
+
 // New endpoint to verify OTP
 exports.verifyEmailOTP = async (req, res, next) => {
     try {
