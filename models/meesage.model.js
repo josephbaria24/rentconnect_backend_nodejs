@@ -17,6 +17,10 @@ const messageSchema = new Schema({
         type: String,
         required: true
     },
+    iv: { 
+        type: String, // Store the IV used during encryption 
+        required: true 
+    },
     sentAt: {
         type: Date,
         default: Date.now
