@@ -1,10 +1,8 @@
-// controllers/trendsController.js
-
 const Inquiry = require('../models/inquiries'); // Ensure Inquiry model is correctly required
 
 const getMonthlyOccupancyData = async (req, res) => {
   try {
-    // Fetch all inquiries directly
+    // Fetch all inquiries
     const inquiries = await Inquiry.find();
 
     // Initialize an object to store monthly occupancy data
@@ -12,11 +10,19 @@ const getMonthlyOccupancyData = async (req, res) => {
 
     // Loop through each inquiry
     inquiries.forEach((inquiry) => {
-      if (inquiry.moveInDate) {
-        // Extract year and month from moveInDate
-        const moveInDate = new Date(inquiry.moveInDate);
-        const year = moveInDate.getFullYear();
-        const month = moveInDate.getMonth() + 1; // months are 0-indexed in JavaScript, so add 1
+      let relevantDate;
+
+      // Check requestType and assign relevant date
+      if (inquiry.requestType === 'rent' && inquiry.approvalDate) {
+        relevantDate = new Date(inquiry.approvalDate);
+      } else if (inquiry.moveInDate) {
+        relevantDate = new Date(inquiry.moveInDate);
+      }
+
+      // If a relevant date exists, proceed
+      if (relevantDate) {
+        const year = relevantDate.getFullYear();
+        const month = relevantDate.getMonth() + 1; // months are 0-indexed in JavaScript, so add 1
 
         // Create a key in the format 'YYYY-MM' for each month
         const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
