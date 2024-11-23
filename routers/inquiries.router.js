@@ -5,7 +5,11 @@ const router = express.Router();
 const inquiryController = require('../controller/inquiries.controller');
 const User = require('../models/user.model');
 const Inquiry = require('../models/inquiries');
-
+const { sendBillEmail } = require('../services/emailer.services');
+const multer = require('multer');
+const nodemailer = require('nodemailer');
+const path = require('path');
+const fs = require('fs');
 // Create a new inquiry
 router.post('/create', inquiryController.createInquiry);
 
@@ -310,4 +314,50 @@ router.get('/email/:userEmail/inquiries', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+
+
+
+
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Set up Multer for file handling
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, `bill_${req.body.billId}.png`);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+router.post('/send-bill', upload.single('billFile'), async (req, res) => {
+    const { email, billId } = req.body; // Get email and billId from request body
+
+    const billFile = req.file;
+    if (!billFile) {
+        return res.status(400).send('No bill file uploaded');
+    }
+
+    const filePath = path.join(uploadDir, billFile.filename);
+    console.log('Bill file saved at:', filePath);
+
+    // Now send the email (or any further processing you need)
+    sendBillEmail(email, billId, filePath, (error, response) => {
+        if (error) {
+            console.error('Error sending bill email:', error);
+            res.status(500).send({ success: false, message: 'Failed to send the bill email.' });
+        } else {
+            console.log('Bill email sent successfully:', response);
+            res.send({ success: true, message: 'Bill email sent successfully.' });
+        }
+    });
+});
+
 module.exports = router;

@@ -6,6 +6,12 @@ const mongoose = require('mongoose');
 const { ProfileModel } = require('../models/profile.model'); 
 const crypto = require('crypto');
 require('dotenv').config();
+const { toZonedTime, format } = require('date-fns-tz');
+const dateFnsTz = require('date-fns-tz');
+console.log('date-fns-tz:', dateFnsTz);
+console.log('toZonedTime:', typeof toZonedTime); // Should log: function
+console.log('format:', typeof format); // Should log: function
+
 
 // Define encryption algorithm and key (store this key securely)
 const algorithm = 'aes-256-cbc';
@@ -13,7 +19,6 @@ const encryptionKey = process.env.ENCRYPTION_KEY
     ? Buffer.from(process.env.ENCRYPTION_KEY, 'hex') 
     : crypto.randomBytes(32); // Fallback to random, but should be constant in production
 const ivLength = 16; // AES requires a 16-byte IV
-
 // Function to encrypt a message
 function encryptMessage(message) {
     const iv = crypto.randomBytes(ivLength); // Generate a random IV for each encryption
@@ -34,25 +39,6 @@ function decryptMessage(encryptedMessage, ivHex) {
     decrypted += decipher.final('utf-8');
     return decrypted;
 }
-// // POST route to send a message
-// router.post('/messages', async (req, res) => {
-//     console.log('Received message data:', req.body);
-//     const { sender, recipient, content } = req.body;
-
-//     if (!sender || !recipient || !content) {
-//         return res.status(400).json({ error: 'Sender, recipient, and content are required' });
-//     }
-
-//     const newMessage = new MessageModel({ sender, recipient, content });
-
-//     try {
-//         const savedMessage = await newMessage.save();
-//         res.status(200).json(savedMessage);
-//     } catch (error) {
-//         console.error('Error saving message:', error);
-//         res.status(500).json({ error: 'Failed to save message' });
-//     }
-// });
 
 router.post('/messages', async (req, res) => {
     const { sender, recipient, content } = req.body;
@@ -69,12 +55,16 @@ router.post('/messages', async (req, res) => {
         console.log('Encrypted Message:', encryptedData.encryptedMessage);
         console.log('IV:', encryptedData.iv);
 
-        // Save encrypted message content and IV
+        // Set the current time in the correct timezone
+        const sentAt = toZonedTime(new Date(), timeZone);  // Get current date and convert to the specified timezone
+
+        // Save encrypted message content and IV along with the correct time
         const newMessage = new MessageModel({
             sender,
             recipient,
             content: encryptedData.encryptedMessage,
-            iv: encryptedData.iv  // Store the IV so you can decrypt it later
+            iv: encryptedData.iv,  // Store the IV for decryption
+            sentAt: sentAt // Store the adjusted sentAt time
         });
 
         const savedMessage = await newMessage.save();
@@ -88,32 +78,7 @@ router.post('/messages', async (req, res) => {
         res.status(500).json({ error: 'Failed to save message' });
     }
 });
-// router.get('/messages', async (req, res) => {
-//     const { sender, recipient } = req.query;
 
-//     if (!sender || !recipient) {
-//         return res.status(400).json({ message: 'Sender and recipient are required' });
-//     }
-
-//     try {
-//         const messages = await MessageModel.find({
-//             $or: [
-//                 { sender, recipient },
-//                 { sender: recipient, recipient: sender }
-//             ],
-//             // Ensure that messages are not marked as deleted for either sender or recipient
-//             $or: [
-//                 { [`deleted.${sender}`]: { $ne: true } },
-//                 { [`deleted.${recipient}`]: { $ne: true } }
-//             ]
-//         }).sort({ sentAt: 1 }); // Sort by sentAt to maintain order
-
-//         res.json(messages);
-//     } catch (error) {
-//         console.error('Error fetching messages:', error);
-//         res.status(500).json({ message: 'Error fetching messages' });
-//     }
-// });
 router.get('/messages', async (req, res) => {
     const { sender, recipient } = req.query;
 
@@ -129,32 +94,37 @@ router.get('/messages', async (req, res) => {
             ]
         }).sort({ sentAt: 1 });
 
-        // Decrypt the message content
+        // Decrypt the message content and format the time
         const decryptedMessages = messages.map(message => {
             // Check if content and IV exist before decrypting
+            let decryptedMessage = {
+                ...message._doc,
+                content: 'No content or IV available for this message'  // Default message if no content or IV
+            };
+
             if (message.content && message.iv) {
                 try {
-                    return {
+                    decryptedMessage = {
                         ...message._doc,
-                        content: decryptMessage(message.content, message.iv)  // Decrypt the message using its IV
+                        content: decryptMessage(message.content, message.iv)  // Decrypt the message
                     };
                 } catch (err) {
                     console.error('Error decrypting message:', err);
-                    return {
-                        ...message._doc,
-                        content: 'Error decrypting message'  // Return a fallback message if decryption fails
-                    };
+                    decryptedMessage.content = 'Error decrypting message';  // Fallback message
                 }
-            } else {
-                // If no IV or content, return a fallback message
-                return {
-                    ...message._doc,
-                    content: 'No content or IV available for this message'
-                };
             }
+
+            // Convert and format the sentAt time to 12-hour format (AM/PM)
+            const zonedTime = toZonedTime(message.sentAt, timeZone);
+            const formattedTime = format(zonedTime, 'yyyy-MM-dd hh:mm:ss a', { timeZone }); // 12-hour format with AM/PM
+
+            // Attach the formatted time to the decrypted message
+            decryptedMessage.time = formattedTime;
+
+            return decryptedMessage;
         });
 
-        res.json(decryptedMessages);
+        res.json(decryptedMessages);  // Return the decrypted messages with formatted time
     } catch (error) {
         console.error('Error fetching messages:', error);
         res.status(500).json({ message: 'Error fetching messages' });
@@ -192,123 +162,30 @@ router.patch('/messages/markAsDeleted', async (req, res) => {
     }
 });
 
+// Example timezone: replace 'Asia/Manila' with your desired timezone
+const timeZone = 'Asia/Manila';
 
+// Example UTC timestamp (sentAt)
+const sentAt = '2024-11-21T11:40:06.675+00:00';
 
+// Convert to Date object
+const utcDate = new Date(sentAt); // Make sure this is a valid Date object
 
-// // GET route to retrieve all conversations for a user
-// router.get('/conversations/:userId', async (req, res) => {
-//     const { userId } = req.params;
+// Adjust the time to the desired time zone
+const zonedTime = toZonedTime(utcDate, timeZone); // Convert UTC to Asia/Manila time zone
 
-//     // Logging the received userId
-//     console.log('Received UserID:', userId);
-    
-//     // Check if userId is a valid ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(userId)) {
-//         console.error('Invalid user ID format');
-//         return res.status(400).json({ error: 'Invalid user ID' });
-//     }
+// Format the time in a readable way
+const formattedTime = format(zonedTime, 'yyyy-MM-dd HH:mm:ss zzzz', { timeZone });
 
-//     // Convert userId to ObjectId
-//     const userObjectId = new mongoose.Types.ObjectId(userId);
-
-//     try {
-//         // Aggregation pipeline to find conversations
-//         const conversations = await MessageModel.aggregate([
-//             {
-//                 $match: {
-//                     $or: [
-//                         { sender: userObjectId }, 
-//                         { recipient: userObjectId }
-//                     ]
-//                 }
-//             },
-//             {
-//                 $sort: { sentAt: -1 } // Sort by sentAt date in descending order
-//             },
-//             {
-//                 $group: {
-//                     _id: {
-//                         conversationWith: {
-//                             $cond: [
-//                                 { $eq: ["$sender", userObjectId] }, 
-//                                 "$recipient", 
-//                                 "$sender"
-//                             ]
-//                         }
-//                     },
-//                     lastMessage: { $first: "$content" },
-//                     time: { $first: "$sentAt" },
-//                     isRead: { $first: "$isRead" },
-//                     deleted: { $first: { $ifNull: [`$deleted.${userId}`, false] } } // Check if conversation is deleted for the user
-//                 }
-//             },
-//             {
-//                 $match: {
-//                     deleted: false // Only include conversations that are not marked as deleted
-//                 }
-//             },
-//             {
-//                 $lookup: {
-//                     from: "users", // The users collection
-//                     localField: "_id.conversationWith",
-//                     foreignField: "_id",
-//                     as: "userInfo"
-//                 }
-//             },
-//             {
-//                 $unwind: {
-//                     path: "$userInfo",
-//                     preserveNullAndEmptyArrays: true // Keep records even if userInfo is not found
-//                 }
-//             },
-//             {
-//                 $lookup: {
-//                     from: "pending_request_profile", // The profiles collection
-//                     localField: "userInfo._id", // Reference to the user ID
-//                     foreignField: "userId", // Match with the userId in the profile
-//                     as: "profileInfo"
-//                 }
-//             },
-//             {
-//                 $unwind: {
-//                     path: "$profileInfo",
-//                     preserveNullAndEmptyArrays: true // Keep records even if profileInfo is not found
-//                 }
-//             },
-//             {
-//                 $project: {
-//                     _id: 0,
-//                     recipientId: "$_id.conversationWith",
-//                     lastMessage: 1,
-//                     time: 1,
-//                     isRead: 1,
-//                     profilePicture: "$userInfo.profilePicture",
-//                     firstName: "$profileInfo.firstName",
-//                     lastName: "$profileInfo.lastName"
-//                 }
-//             }
-//         ]);
-
-//         // Log the number of conversations retrieved
-//         console.log('Number of conversations found:', conversations.length);
-
-//         // Return the conversations or an empty array if none found
-//         res.status(200).json(conversations);
-//     } catch (error) {
-//         console.error('Error fetching conversations:', error);
-//         res.status(500).json({ error: 'Failed to retrieve conversations' });
-//     }
-// });
-
-
-
+console.log('Formatted Time:', formattedTime);
 // GET route to retrieve all conversations for a user
+
 router.get('/conversations/:userId', async (req, res) => {
     const { userId } = req.params;
 
     // Logging the received userId
     console.log('Received UserID:', userId);
-    
+
     // Check if userId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         console.error('Invalid user ID format');
@@ -324,7 +201,7 @@ router.get('/conversations/:userId', async (req, res) => {
             {
                 $match: {
                     $or: [
-                        { sender: userObjectId }, 
+                        { sender: userObjectId },
                         { recipient: userObjectId }
                     ]
                 }
@@ -337,8 +214,8 @@ router.get('/conversations/:userId', async (req, res) => {
                     _id: {
                         conversationWith: {
                             $cond: [
-                                { $eq: ["$sender", userObjectId] }, 
-                                "$recipient", 
+                                { $eq: ["$sender", userObjectId] },
+                                "$recipient",
                                 "$sender"
                             ]
                         }
@@ -398,12 +275,18 @@ router.get('/conversations/:userId', async (req, res) => {
             }
         ]);
 
-        // Decrypt the last message for each conversation
+        // Decrypt the last message and format the time for each conversation
         const decryptedConversations = conversations.map(conversation => {
             const decryptedLastMessage = decryptMessage(conversation.lastMessage, conversation.iv);
+            
+            // Convert and format the time to 12-hour format (AM/PM)
+            const zonedTime = toZonedTime(conversation.time, timeZone);
+            const formattedTime = format(zonedTime, 'hh:mm a', { timeZone }); // 12-hour format with AM/PM
+            
             return {
                 ...conversation,
-                lastMessage: decryptedLastMessage // Replace encrypted content with decrypted content
+                lastMessage: decryptedLastMessage,
+                time: formattedTime, // Set the formatted time here
             };
         });
 
@@ -417,7 +300,6 @@ router.get('/conversations/:userId', async (req, res) => {
         res.status(500).json({ error: 'Failed to retrieve conversations' });
     }
 });
-
 
 // Mark message as unread/read
 router.patch('/messages/markAsUnread', async (req, res) => {

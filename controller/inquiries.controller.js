@@ -7,8 +7,10 @@ const RoomServices = require('../services/room.services')
 const cron = require('node-cron');
 const { calculateRemainingTime } = require('../utils/timeUtils');
 const EndedInquiry = require('../models/endedInquiry.model'); // Import the new model
-
-
+const RentalAgreement = require('../models/rentalAgreemen.model'); // Adjust the path as necessary
+const { sendRentalAgreementEmail } = require('../services/emailer.services')
+const {ProfileModel} = require('../models/profile.model');
+const User = require('../models/user.model');
 // Create a new inquiry
 const createInquiry = async (req, res) => {
   try {
@@ -114,6 +116,8 @@ const getInquiriesByRoomOwner = async (req, res) => {
   }
 };
 
+
+
 const updateInquiryAndApprove = async (req, res) => {
   const { inquiryId } = req.params;
   const { 
@@ -165,6 +169,85 @@ const updateInquiryAndApprove = async (req, res) => {
       roomUpdateData.roomStatus = 'occupied';
       roomUpdateData.rentedDate = new Date();
       roomUpdateData.$addToSet = { occupantUsers: userId };
+
+      // Fetch room details to create a rental agreement
+      const room = await Room.findById(roomId);
+      if (!room) {
+        return res.status(404).json({ message: 'Room not found' });
+      }
+
+      // Create the rental agreement
+      const newAgreement = new RentalAgreement({
+        occupantId: userId,
+        landlordId: room.ownerId, // Use ownerId instead of landlordId
+        roomId,
+        monthlyRent: room.price,
+        securityDeposit: room.deposit,
+        leaseStartDate: new Date(),
+        leaseEndDate: null,
+        terms: customTerms || 'Standard rental agreement terms',  // Use customTerms if provided
+        status: 'active'
+      });
+
+      // Save the rental agreement
+      await newAgreement.save();
+
+      // Fetch landlord's profile using their userId
+      const landlordProfile = await ProfileModel.findOne({ userId: room.ownerId }); // Use ownerId to find the landlord's profile
+      if (!landlordProfile) {
+        return res.status(404).json({ message: 'Landlord profile not found' });
+      }
+
+      // Fetch occupant's profile using their userId
+      const occupantProfile = await ProfileModel.findOne({ userId: userId });
+      if (!occupantProfile) {
+        return res.status(404).json({ message: 'Occupant profile not found' });
+      }
+
+      // Fetch landlord's email from User model
+      const landlordUser = await User.findById(room.ownerId); // Fetch landlord user
+      if (!landlordUser || !landlordUser.email) {
+        return res.status(404).json({ message: 'Landlord user not found or email not available' });
+      }
+
+      // Fetch occupant's email from User model
+      const occupantUser = await User.findById(userId); // Fetch occupant user
+      if (!occupantUser || !occupantUser.email) {
+        return res.status(404).json({ message: 'Occupant user not found or email not available' });
+      }
+
+      // Create email content using first and last names
+      const landlordFullName = `${landlordProfile.firstName} ${landlordProfile.lastName}`;
+      const occupantFullName = `${occupantProfile.firstName} ${occupantProfile.lastName}`;
+
+      // Create contact details objects
+      const landlordContactDetails = {
+        phone: landlordProfile.contactDetails.phone,
+        address: landlordProfile.contactDetails.address
+      };
+
+      const occupantContactDetails = {
+        phone: occupantProfile.contactDetails.phone,
+        address: occupantProfile.contactDetails.address
+      };
+
+      // Send rental agreement email to landlord and occupant
+      sendRentalAgreementEmail(
+        landlordUser.email,   // Use landlord's email from User model
+        landlordFullName,
+        landlordContactDetails,
+        occupantUser.email,   // Use occupant's email from User model
+        occupantFullName,
+        occupantContactDetails,
+        newAgreement,
+        (error, response) => {
+          if (error) {
+            console.error('Error sending rental agreement email:', error);
+          } else {
+            console.log('Rental agreement email sent successfully:', response);
+          }
+        }
+      );
     }
 
     const updatedRoom = await Room.findByIdAndUpdate(roomId, roomUpdateData, { new: true });
@@ -179,6 +262,72 @@ const updateInquiryAndApprove = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+// const updateInquiryAndApprove = async (req, res) => {
+//   const { inquiryId } = req.params;
+//   const { 
+//     status, 
+//     requestType, 
+//     roomId, 
+//     userId, 
+//     reservationDuration, 
+//     proposedStartDate, 
+//     customTerms 
+//   } = req.body;
+
+//   try {
+//     const updateData = {
+//       status: status,
+//       requestType: requestType,
+//       approvalDate: new Date(),
+//       proposedStartDate: proposedStartDate, // Include proposed start date
+//       customTerms: customTerms // Include custom terms
+//     };
+
+//     // Only update reservationDuration if requestType is 'reservation'
+//     if (requestType === 'reservation' && reservationDuration) {
+//       updateData.reservationDuration = reservationDuration;
+//     }
+
+//     // Set isRented to true if the request type is 'rent' and status is approved
+//     if (requestType === 'rent' && status === 'approved') {
+//       updateData.isRented = true;
+//     }
+
+//     const updatedInquiry = await Inquiry.findByIdAndUpdate(
+//       inquiryId,
+//       updateData,
+//       { new: true }
+//     );
+
+//     if (!updatedInquiry) {
+//       return res.status(404).send('Inquiry not found');
+//     }
+
+//     let roomUpdateData = { roomStatus: '' };
+
+//     if (requestType === 'reservation' && status === 'approved') {
+//       roomUpdateData.roomStatus = 'reserved';
+//       roomUpdateData.reservedDate = new Date();
+//       roomUpdateData.$addToSet = { reservationInquirers: userId };
+//     } else if (requestType === 'rent' && status === 'approved') {
+//       roomUpdateData.roomStatus = 'occupied';
+//       roomUpdateData.rentedDate = new Date();
+//       roomUpdateData.$addToSet = { occupantUsers: userId };
+//     }
+
+//     const updatedRoom = await Room.findByIdAndUpdate(roomId, roomUpdateData, { new: true });
+
+//     if (!updatedRoom) {
+//       return res.status(404).send('Room not found');
+//     }
+
+//     res.status(200).json({ inquiry: updatedInquiry, room: updatedRoom });
+//   } catch (error) {
+//     console.error("Error updating inquiry and room:", error);
+//     res.status(500).send('Server error');
+//   }
+// };
 
 
 const getInquiriesByPropertyId = async (req, res) => {

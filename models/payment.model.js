@@ -52,6 +52,10 @@ const paymentSchema = new Schema({
         updated_at: {
             type: Date,
             default: Date.now
+        },
+        rejectionReason: {
+            type: String,
+            required: false
         }
     }]
 });

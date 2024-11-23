@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
-
+const fs = require('fs');
+const path = require('path');
 // Function to send verification email
 async function sendVerificationEmail(email, otp, callback) {
     const htmlBody = `
@@ -373,7 +374,49 @@ async function sendProfileUpdateEmail(profile, callback) {
         }
     });
 }
+// Function to send a bill via email
+async function sendBillEmail(email, billId, billPath, callback) {
+    const htmlBody = `
+        <div style="font-family: Arial, sans-serif;">
+            <h2>Dear ${email},</h2>
+            <p>Attached is your bill for the requested transaction.</p>
+            <p>Bill ID: <strong>${billId}</strong></p>
+            <p>Please review the attached bill for details.</p>
+        </div>
+    `;
 
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // use TLS
+        auth: {
+            user: '7d268b001@smtp-brevo.com',  // Your Brevo login
+            pass: 'BwGgTIEQmzCOHqZ1'          // Your Brevo password
+        }
+    });
+
+    const mailOptions = {
+        from: 'rentconnect.it@gmail.com',  // Replace with your verified sender email
+        to: email,                         // Recipient's email
+        subject: `Your Bill - ${billId}`,  // Subject of the email
+        html: htmlBody,                    // HTML body of the email
+        attachments: [
+            {
+                filename: `bill_${billId}.png`,   // File name for the attachment
+                path: billPath,                  // Path to the file
+                contentType: 'image/png/jpg/webp/jpeg'         // File type
+            }
+        ]
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return callback(error);
+        } else {
+            return callback(null, info.response);
+        }
+    });
+}
 
 module.exports = {
     sendVerificationEmail,
@@ -384,5 +427,6 @@ module.exports = {
     sendBillingStatementEmail,
     sendProofUploadNotificationEmail,
     sendNewPropertyEmail,
-    sendProfileUpdateEmail
+    sendProfileUpdateEmail,
+    sendBillEmail
 };

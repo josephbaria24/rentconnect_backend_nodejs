@@ -72,20 +72,19 @@ exports.markAsRead = async (req, res) => {
 };
 
 exports.markAllAsRead = async (req, res) => {
-  const { userId } = req.params;
+  const { userId } = req.body; // Use req.body to receive userId
+
+  if (!userId) {
+    return res.status(400).json({ status: false, error: 'UserId is required' });
+  }
 
   try {
-    if (!userId) {
-      return res.status(400).json({ status: false, error: 'UserId is required' });
-    }
-
     const result = await notificationService.markAllAsRead(userId);
     res.status(200).json({ status: true, message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ status: false, error: error.message });
   }
 };
-
 // Controller to clear all notifications for a user
 exports.clearNotifications = async (req, res) => {
   const { userId } = req.params;

@@ -31,24 +31,28 @@ router.delete('/room/:roomId/proofOfPayment', PaymentController.deleteProofOfPay
 router.delete('/room/:roomId/payment/:month/proof/:type', PaymentController.deleteProof); 
 router.post('/payments/updateStatus', PaymentController.updatePaymentStatus);
 
-
-
 router.put('/monthlyPayments/:monthPaymentId/status', async (req, res) => {
     const { monthPaymentId } = req.params;
-    const { status } = req.body; // Expect status in the request body
+    const { status, rejectionReason } = req.body; // Extract both status and rejectionReason from the request body
 
     if (!['pending', 'completed', 'rejected'].includes(status)) {
         return res.status(400).json({ message: 'Invalid status value' });
     }
 
+    // If status is 'rejected', ensure that rejectionReason is provided
+    if (status === 'rejected' && !rejectionReason) {
+        return res.status(400).json({ message: 'Rejection reason is required when status is rejected' });
+    }
+
     try {
-        // Update the status of the specific monthly payment by its monthPaymentId
+        // Update the status and rejectionReason of the specific monthly payment by its monthPaymentId
         const updatedPayment = await PaymentModel.findOneAndUpdate(
             { 'monthlyPayments._id': monthPaymentId }, // Find payment containing the monthly payment
             { 
                 $set: { 
                     'monthlyPayments.$.status': status,
-                    'monthlyPayments.$.updated_at': Date.now()
+                    'monthlyPayments.$.updated_at': Date.now(),
+                    'monthlyPayments.$.rejectionReason': rejectionReason // Add rejectionReason if status is 'rejected'
                 } 
             },
             { new: true }
@@ -64,4 +68,37 @@ router.put('/monthlyPayments/:monthPaymentId/status', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+
+// router.put('/monthlyPayments/:monthPaymentId/status', async (req, res) => {
+//     const { monthPaymentId } = req.params;
+//     const { status } = req.body; // Expect status in the request body
+
+//     if (!['pending', 'completed', 'rejected'].includes(status)) {
+//         return res.status(400).json({ message: 'Invalid status value' });
+//     }
+
+//     try {
+//         // Update the status of the specific monthly payment by its monthPaymentId
+//         const updatedPayment = await PaymentModel.findOneAndUpdate(
+//             { 'monthlyPayments._id': monthPaymentId }, // Find payment containing the monthly payment
+//             { 
+//                 $set: { 
+//                     'monthlyPayments.$.status': status,
+//                     'monthlyPayments.$.updated_at': Date.now()
+//                 } 
+//             },
+//             { new: true }
+//         );
+
+//         if (!updatedPayment) {
+//             return res.status(404).json({ message: 'Monthly Payment not found' });
+//         }
+
+//         res.status(200).json(updatedPayment);
+//     } catch (error) {
+//         console.error('Error updating monthly payment status:', error);
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// });
 module.exports = router;

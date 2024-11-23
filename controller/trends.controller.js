@@ -1,4 +1,5 @@
 const Inquiry = require('../models/inquiries'); // Ensure Inquiry model is correctly required
+const PropertyModel = require('../models/properties.model');
 
 const getMonthlyOccupancyData = async (req, res) => {
   try {
@@ -53,6 +54,29 @@ const getMonthlyOccupancyData = async (req, res) => {
   }
 };
 
+
+// Fetch the top 5 most viewed properties
+const getMostViewedProperties = async (req, res) => {
+  try {
+    // Find the top 5 properties with the most views
+    const mostViewedProperties = await PropertyModel.find()
+      .sort({ 'views.length': -1 }) // Sort by the number of views in descending order
+      .limit(5) // Limit the results to 5
+      .populate('userId', 'name email') // Populate user data if needed
+      .exec();
+
+    if (!mostViewedProperties || mostViewedProperties.length === 0) {
+      return res.status(404).json({ message: 'No properties found.' });
+    }
+
+    res.status(200).json({
+      properties: mostViewedProperties,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   getMonthlyOccupancyData,
+  getMostViewedProperties,
 };
