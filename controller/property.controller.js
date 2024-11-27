@@ -5,12 +5,12 @@ const {sendNewPropertyEmail} = require('../services/emailer.services');
 
 // Middleware for handling multiple file uploads
 exports.uploadPhotos = upload.fields([
-    { name: 'photo', maxCount: 1 },        // Main property photo
-    { name: 'photo2', maxCount: 1 },       // Additional photo 2
-    { name: 'photo3', maxCount: 1 },       // Additional photo 3
-    { name: 'legalDocPhoto', maxCount: 1 },  // Legal document photo
-    { name: 'legalDocPhoto2', maxCount: 1 }, // Additional legal doc photo 2
-    { name: 'legalDocPhoto3', maxCount: 1 }, // Additional legal doc photo 3
+    { name: 'photo', maxCount: 1 },        
+    { name: 'photo2', maxCount: 1 },       
+    { name: 'photo3', maxCount: 1 },       
+    { name: 'legalDocPhoto', maxCount: 1 }, 
+    { name: 'legalDocPhoto2', maxCount: 1 },
+    { name: 'legalDocPhoto3', maxCount: 1 }, 
 ]);
 exports.createProperty = async (req, res, next) => {
     try {

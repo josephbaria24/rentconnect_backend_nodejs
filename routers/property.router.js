@@ -150,4 +150,34 @@ router.get('/averageRating/:propertyId', async (req, res) => {
     }
 });
 
+
+
+// GET property comments by property ID
+router.get('/:propertyId/comments', async (req, res) => {
+    const { propertyId } = req.params;
+
+    try {
+        // Find the property by ID
+        const property = await PropertyModel.findById(propertyId).select('ratings').populate('ratings.occupantId', 'email');
+
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
+        // Extract and return comments
+        const comments = property.ratings.map(rating => ({
+            occupantName: rating.occupantId?.email || 'Unknown',
+            ratingValue: rating.ratingValue,
+            comment: rating.comment,
+            createdAt: rating.createdAt
+        }));
+
+        res.status(200).json(comments);
+    } catch (error) {
+        console.error('Error fetching property comments:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
 module.exports = router;

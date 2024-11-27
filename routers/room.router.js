@@ -8,6 +8,7 @@ const User = require('../models/user.model');
 const RentalAgreement = require('../models/rentalAgreemen.model'); // Adjust the path as necessary
 const { sendRentalAgreementEmail } = require('../services/emailer.services')
 const {ProfileModel} = require('../models/profile.model')
+const OccupantModel = require('../models/occupant.model');
 // Apply the upload middleware to routes that need file uploads
 router.post('/createRoom', upload.any(), RoomController.createRoom);
 
@@ -347,5 +348,33 @@ router.get('/landlord-email/:roomId', async (req, res) => {
 });
 
   
+
+router.get('/occupant', async (req, res) => {
+  try {
+      // Extract the list of occupant IDs from the query parameters
+      const occupantIds = req.query.ids;
+
+      // Check if the IDs are provided
+      if (!occupantIds || occupantIds.length === 0) {
+          return res.status(400).json({ message: 'No occupant IDs provided' });
+      }
+
+      // Convert the string of IDs into an array (if they are in a comma-separated string)
+      const idsArray = occupantIds.split(',');
+
+      // Find the occupants by their IDs
+      const occupants = await OccupantModel.find({ _id: { $in: idsArray } });
+
+      if (!occupants || occupants.length === 0) {
+          return res.status(404).json({ message: 'Occupants not found' });
+      }
+
+      // Return the list of occupant details
+      res.status(200).json(occupants);
+  } catch (error) {
+      console.error('Error fetching occupant details:', error);
+      res.status(500).json({ message: 'Server error', error });
+  }
+});
 
 module.exports = router;
