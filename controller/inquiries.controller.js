@@ -554,7 +554,7 @@ const getPropertyByRoomId = async (req, res) => {
 
 const addRoomBill = async (req, res) => {
   const { inquiryId } = req.params;
-  const { electricity, water, maintenance, internet, dueDate, isPaid } = req.body; // Add isPaid to the body
+  const { electricity, water, maintenance, internet, dueDate, isPaid, paymentMethod } = req.body; // Add isPaid to the body
 
   try {
     const inquiry = await Inquiry.findById(inquiryId);
@@ -589,7 +589,8 @@ const addRoomBill = async (req, res) => {
     // Create a new bill
     const billData = {
       dueDate: dueDate || null,
-      isPaid: isPaid || false, // Default to false if not provided at the top level
+      isPaid: isPaid || false, 
+      paymentMethod: paymentMethod || { type: null, details: null },
       created_at: Date.now(),
       updated_at: Date.now(),
       electricity: {

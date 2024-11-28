@@ -83,6 +83,15 @@ const inquirySchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     },
+    paymentMethod: {  // Modify this to be an object to store both type and details
+      type: { 
+        type: String,  // 'E-wallet', 'Hand-to-hand', 'Bank'
+      },
+      details: { 
+        type: String,  // Account details or relevant info for the selected method
+        required: false 
+      }
+    },
     electricity: { 
       amount: { 
         type: Number 
