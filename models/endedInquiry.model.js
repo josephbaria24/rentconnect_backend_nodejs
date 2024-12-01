@@ -26,7 +26,7 @@ const endedInquirySchema = new mongoose.Schema({
   },
   moveOutDate: { 
     type: Date, 
-    required: true 
+    required: false 
   },
   requestDate: { 
     type: Date, 

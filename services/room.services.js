@@ -1,5 +1,8 @@
 const RoomModel = require('../models/room.model');
 const OccupantModel = require('../models/occupant.model');
+const InquiryModel = require('../models/inquiries');
+const EndedInquiry = require('../models/endedInquiry.model');
+const PaymentModel = require('../models/payment.model');  // Import the PaymentModel
 
 class RoomServices {
     static async createMultipleRooms(roomsData) {
@@ -100,13 +103,88 @@ class RoomServices {
             throw new Error('Room is not available for rent');
         }
     }
+    // static async markAsAvailable(roomId) {
+    //     try {
+    //         const room = await RoomModel.findById(roomId);
+    //         if (!room) {
+    //             throw new Error('Room not found');
+    //         }
+    
+    //         // Create EndedInquiry for all pending inquiries
+    //         const pendingInquiries = await InquiryModel.find({ roomId, status: 'pending' });
+    //         console.log('Pending Inquiries:', pendingInquiries); // Debugging line
+    
+    //         for (let inquiry of pendingInquiries) {
+    //             // Create ended inquiry with moveOutDate as the current date
+    //             const endedInquiry = new endedInquiryModel({
+    //                 userId: inquiry.userId,
+    //                 roomId: inquiry.roomId,
+    //                 requestType: inquiry.requestType,
+    //                 moveOutDate: new Date(),  // Set the moveOutDate as the current date
+    //             });
+    
+    //             try {
+    //                 // Save the ended inquiry
+    //                 await endedInquiry.save();
+    //             } catch (saveError) {
+    //                 console.error('Error saving ended inquiry:', saveError);
+    //             }
+    //         }
+    
+    //         // Delete all payments associated with this room
+    //         await PaymentModel.deleteMany({ roomId: roomId });
+    
+    //         // Now clear the reservation inquiries and mark the room as available
+    //         room.roomStatus = 'available';
+    //         room.dueDate = null;
+    //         room.rentedDate = null;
+    //         room.reservedDate = null;
+    //         room.reservationExpiration = null;
+    //         room.reservationDuration = null;
+    //         room.occupantUsers = [];
+    //         room.occupantNonUsers = [];
+    //         room.reservationInquirers = [];
+    
+    //         await room.save();
+    
+    //         return room;
+    //     } catch (error) {
+    //         console.error('Error marking room as available:', error);
+    //         throw new Error('Failed to mark room as available');
+    //     }
+    // }
+
+
     static async markAsAvailable(roomId) {
         try {
             const room = await RoomModel.findById(roomId);
             if (!room) {
                 throw new Error('Room not found');
             }
-    
+
+            // Find all inquiries related to this room that are not ended
+            const inquiries = await InquiryModel.find({ roomId: roomId, status: { $ne: 'ended' } });
+
+            // Move these inquiries to the EndedInquiry model
+            for (const inquiry of inquiries) {
+                const endedInquiry = new EndedInquiry({
+                    userId: inquiry.userId,
+                    roomId: inquiry.roomId,
+                    requestType: inquiry.requestType,
+                    moveOutDate: inquiry.moveOutDate, // Assuming you have a moveOutDate in the inquiry
+                    requestDate: inquiry.requestDate,
+                });
+
+                // Save the ended inquiry to the database
+                await endedInquiry.save();
+
+                // Delete the original inquiry
+                await InquiryModel.findByIdAndDelete(inquiry._id);
+            }
+
+            // Delete all payments associated with this room
+            await PaymentModel.deleteMany({ roomId: roomId });
+
             // Update room status to "available" and clear specified fields
             room.roomStatus = 'available';
             room.dueDate = null;
@@ -118,17 +196,15 @@ class RoomServices {
             room.occupantNonUsers = [];
             room.reservationInquirers = [];
 
-    
             // Save the updated room data to the database
             await room.save();
-    
+
             return room;
         } catch (error) {
             console.error('Error marking room as available:', error);
             throw new Error('Failed to mark room as available');
         }
     }
-    
 }
 
 module.exports = RoomServices;
